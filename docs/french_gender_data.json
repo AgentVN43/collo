@@ -1,0 +1,2245 @@
+{
+  "feminine_endings": {
+    "-esse": {
+      "examples": [
+        "politesse",
+        "richesse",
+        "caresse",
+        "faiblesse",
+        "promesse",
+        "princesse"
+      ],
+      "exceptions": [
+        "prépresse"
+      ]
+    },
+    "-ude": {
+      "examples": [
+        "attitude",
+        "habitude",
+        "altitude",
+        "étude",
+        "solitude"
+      ],
+      "exceptions": [
+        "boude",
+        "coude",
+        "interlude",
+        "prélude"
+      ]
+    },
+    "-ure": {
+      "examples": [
+        "culture",
+        "voiture",
+        "nature",
+        "aventure",
+        "confiture",
+        "lecture"
+      ],
+      "exceptions": [
+        "carbure",
+        "centaure",
+        "chlorure",
+        "cyanure",
+        "dinosaure",
+        "mercure",
+        "murmure",
+        "sulfure"
+      ]
+    },
+    "-aille": {
+      "examples": [
+        "taille",
+        "bataille",
+        "trouvaille"
+      ],
+      "exceptions": []
+    },
+    "-té": {
+      "examples": [
+        "pauvreté",
+        "bonté",
+        "liberté",
+        "sécurité",
+        "qualité",
+        "beauté",
+        "acidité",
+        "brévité"
+      ],
+      "exceptions": [
+        "aligoté",
+        "aparté",
+        "arrêté",
+        "comité",
+        "comté",
+        "côté",
+        "député",
+        "écarté",
+        "été",
+        "invité",
+        "pâté",
+        "traité"
+      ]
+    },
+    "-ance": {
+      "examples": [
+        "chance",
+        "ambulance",
+        "confiance",
+        "patience",
+        "connaissance"
+      ],
+      "exceptions": []
+    },
+    "-ence": {
+      "examples": [
+        "apparence",
+        "différence",
+        "expérience",
+        "essence",
+        "violence"
+      ],
+      "exceptions": [
+        "silence"
+      ]
+    },
+    "-ette": {
+      "examples": [
+        "baguette",
+        "lunette",
+        "poussette",
+        "cigarette",
+        "cocotte"
+      ],
+      "exceptions": [
+        "quartette",
+        "quintette",
+        "squelette"
+      ]
+    },
+    "-ie": {
+      "examples": [
+        "chimie",
+        "mairie",
+        "géologie",
+        "librairie",
+        "académie",
+        "bonhomie",
+        "vie",
+        "philosophie",
+        "énergie",
+        "catégorie"
+      ],
+      "exceptions": [
+        "brie",
+        "foie",
+        "génie",
+        "incendie",
+        "messie",
+        "parapluie",
+        "sosie",
+        "zombie",
+        "cryptographie",
+        "périhélie"
+      ]
+    },
+    "-tion": {
+      "examples": [
+        "inscription",
+        "action",
+        "circulation",
+        "nation",
+        "solution",
+        "conversation",
+        "télévision",
+        "prédiction",
+        "célébration",
+        "préparation"
+      ],
+      "exceptions": [
+        "bastion",
+        "cation"
+      ]
+    },
+    "-sion": {
+      "examples": [
+        "décision",
+        "télévision",
+        "collision",
+        "fusion",
+        "adoption",
+        "bénédiction"
+      ],
+      "exceptions": []
+    },
+    "-ée": {
+      "examples": [
+        "allée",
+        "chicorée",
+        "journée",
+        "idée",
+        "arrivée",
+        "soirée"
+      ],
+      "exceptions": [
+        "apogée",
+        "lycée",
+        "musée",
+        "périgée",
+        "trophée",
+        "pedigree",
+        "colisée",
+        "mausolée"
+      ]
+    },
+    "-elle": {
+      "examples": [
+        "demoiselle"
+      ],
+      "exceptions": [
+        "bacille",
+        "braille",
+        "gorille",
+        "intervalle",
+        "mille",
+        "portefeuille",
+        "vaudeville",
+        "vermicelle",
+        "violoncelle"
+      ]
+    },
+    "-ine": {
+      "examples": [
+        "aine",
+        "baleine",
+        "cuisine",
+        "cabine"
+      ],
+      "exceptions": [
+        "capitaine",
+        "domaine",
+        "moine",
+        "magazine",
+        "patrimoine",
+        "platine",
+        "ciné",
+        "pipeline"
+      ]
+    },
+    "-ise": {
+      "examples": [
+        "ardoise",
+        "cerise",
+        "surprise",
+        "devise",
+        "bétise"
+      ],
+      "exceptions": [
+        "malaise",
+        "turquoise"
+      ]
+    },
+    "-ite": {
+      "examples": [
+        "arthrite",
+        "cellulite"
+      ],
+      "exceptions": [
+        "anthracite",
+        "ermite",
+        "granite",
+        "graphite",
+        "kite",
+        "mérite",
+        "opposite",
+        "plébiscite",
+        "rite",
+        "satellite",
+        "site",
+        "termit",
+        "trilobite",
+        "théodolite",
+        "comité",
+        "gîte"
+      ]
+    },
+    "-lle": {
+      "examples": [
+        "abeille",
+        "balle"
+      ],
+      "exceptions": [
+        "bacille",
+        "braille",
+        "gorille",
+        "intervalle",
+        "mille",
+        "portefeuille",
+        "vaudeville",
+        "vermicelle",
+        "violoncelle",
+        "scelle"
+      ]
+    },
+    "-tié": {
+      "examples": [
+        "amitié",
+        "moitié",
+        "pitié",
+        "confidentialité"
+      ],
+      "exceptions": []
+    },
+    "-tte": {
+      "examples": [
+        "baguette",
+        "cocotte",
+        "poussette",
+        "cigarette"
+      ],
+      "exceptions": [
+        "quartette",
+        "quintette",
+        "squelette"
+      ]
+    },
+    "-ade": {
+      "examples": [
+        "pommade",
+        "façade",
+        "parade",
+        "sérénade"
+      ],
+      "exceptions": [
+        "stade",
+        "jade",
+        "grade"
+      ]
+    },
+    "-aison": {
+      "examples": [
+        "saison",
+        "raison",
+        "façon",
+        "liaison",
+        "maison",
+        "rançon",
+        "boisson",
+        "chanson"
+      ],
+      "exceptions": []
+    },
+    "-euse": {
+      "examples": [
+        "vendeuse",
+        "danseuse",
+        "maîtresse"
+      ],
+      "exceptions": []
+    },
+    "-ienne": {
+      "examples": [
+        "musicienne",
+        "chienne"
+      ],
+      "exceptions": []
+    },
+    "-ière": {
+      "examples": [
+        "bannière",
+        "cafetière",
+        "bouchère",
+        "ouvrière"
+      ],
+      "exceptions": [
+        "arrière",
+        "cimetière",
+        "derrière"
+      ]
+    },
+    "-onne": {
+      "examples": [
+        "baronne",
+        "patronne"
+      ],
+      "exceptions": []
+    },
+    "-trice": {
+      "examples": [
+        "traductrice"
+      ],
+      "exceptions": []
+    },
+    "-ice": {
+      "examples": [
+        "justice"
+      ],
+      "exceptions": [
+        "exercice",
+        "sacrifice",
+        "service",
+        "bénéfice",
+        "office",
+        "artifice",
+        "précipice",
+        "dentifrice",
+        "armistice",
+        "vice",
+        "prince",
+        "commerce",
+        "pouce",
+        "espace",
+        "crustace"
+      ]
+    },
+    "-çon": {
+      "examples": [
+        "leçon"
+      ],
+      "exceptions": [
+        "garçon",
+        "caleçon",
+        "glaçon",
+        "soupçon"
+      ]
+    },
+    "-eur": {
+      "examples": [
+        "odeur",
+        "sueur",
+        "peur",
+        "chaleur",
+        "douleur",
+        "couleur",
+        "fleur",
+        "valeur",
+        "largeur",
+        "erreur",
+        "horreur",
+        "vapeur",
+        "soeur"
+      ],
+      "exceptions": [
+        "bonheur",
+        "haut-parleur",
+        "honneur",
+        "tailleur",
+        "malheur"
+      ]
+    },
+    "-oire": {
+      "examples": [
+        "histoire",
+        "poire"
+      ],
+      "exceptions": [
+        "conservatoire",
+        "laboratoire",
+        "pourboire",
+        "interrogatoire"
+      ]
+    },
+    "-aine/-eine": {
+      "examples": [
+        "douzaine",
+        "peine"
+      ],
+      "exceptions": [
+        "domaine",
+        "capitaine"
+      ]
+    },
+    "-ique": {
+      "examples": [
+        "applique",
+        "basilique"
+      ],
+      "exceptions": [
+        "cantique",
+        "générique",
+        "graphique",
+        "lexique",
+        "moustique",
+        "périphérique",
+        "pique-nique"
+      ]
+    },
+    "-se": {
+      "examples": [
+        "vase"
+      ],
+      "exceptions": [
+        "malaise",
+        "suspense",
+        "sconse",
+        "opposé",
+        "exposé",
+        "gypse",
+        "inverse",
+        "colosse",
+        "carrosse",
+        "pamplemousse"
+      ]
+    }
+  },
+  "masculine_endings": {
+    "-teur": {
+      "examples": [
+        "acteur",
+        "agriculteur",
+        "chanteur",
+        "traducteur",
+        "moteur",
+        "ordinateur"
+      ],
+      "exceptions": []
+    },
+    "-in": {
+      "examples": [
+        "jardin",
+        "voisin",
+        "magasin",
+        "bassin",
+        "destin",
+        "baldaquin",
+        "cousin",
+        "refrain",
+        "copain"
+      ],
+      "exceptions": [
+        "fin",
+        "main",
+        "tatin",
+        "boisson",
+        "façon",
+        "liaison",
+        "maison",
+        "raison",
+        "rançon",
+        "saison",
+        "chanson"
+      ]
+    },
+    "-ment": {
+      "examples": [
+        "médicament",
+        "appartement",
+        "comportement",
+        "aliment",
+        "déclenchement",
+        "moment",
+        "gouvernement",
+        "sentiment",
+        "bâtiment",
+        "changement",
+        "parlement",
+        "jugement"
+      ],
+      "exceptions": [
+        "jument"
+      ]
+    },
+    "-isme/-asme": {
+      "examples": [
+        "tourisme",
+        "fantasme",
+        "anarchisme",
+        "cyclisme",
+        "réalisme",
+        "journalisme",
+        "féminisme",
+        "capitalisme",
+        "enthousiasme",
+        "charisme",
+        "communisme"
+      ],
+      "exceptions": []
+    },
+    "-al": {
+      "examples": [
+        "animal",
+        "tribunal",
+        "journal",
+        "cheval",
+        "carnaval"
+      ],
+      "exceptions": []
+    },
+    "-é": {
+      "examples": [
+        "résumé",
+        "pré",
+        "maître",
+        "été"
+      ],
+      "exceptions": []
+    },
+    "-ier": {
+      "examples": [
+        "cahier",
+        "dossier",
+        "boucher",
+        "ouvrier",
+        "papier",
+        "sucrier",
+        "calendrier",
+        "érable",
+        "cartable",
+        "portable"
+      ],
+      "exceptions": [
+        "cuiller",
+        "mer"
+      ]
+    },
+    "-ail": {
+      "examples": [
+        "travail",
+        "détail",
+        "refrain",
+        "copain"
+      ],
+      "exceptions": []
+    },
+    "-eau": {
+      "examples": [
+        "cadeau",
+        "agneau",
+        "bateau",
+        "château",
+        "gâteau",
+        "cerveau",
+        "chapeau",
+        "tableau",
+        "pneu"
+      ],
+      "exceptions": [
+        "peau",
+        "eau"
+      ]
+    },
+    "-oir": {
+      "examples": [
+        "tiroir",
+        "mouchoir",
+        "arrosoir",
+        "fermoir",
+        "miroir",
+        "soir",
+        "pouvoir",
+        "devoir",
+        "couloir"
+      ],
+      "exceptions": [
+        "roche-réservoir",
+        "ville-dortoir"
+      ]
+    },
+    "-age": {
+      "examples": [
+        "message",
+        "passage",
+        "fromage",
+        "voyage",
+        "garage",
+        "sauvetage",
+        "patinage",
+        "courage",
+        "naufrage"
+      ],
+      "exceptions": [
+        "page",
+        "plage",
+        "image",
+        "cage",
+        "nage",
+        "rage"
+      ]
+    },
+    "-eur": {
+      "examples": [
+        "vendeur",
+        "danseur",
+        "bonheur",
+        "malheur",
+        "honneur",
+        "haut-parleur",
+        "tailleur"
+      ],
+      "exceptions": [
+        "fleur",
+        "couleur",
+        "chaleur",
+        "peur",
+        "douleur",
+        "odeur",
+        "sueur",
+        "valeur",
+        "largeur",
+        "erreur",
+        "horreur",
+        "vapeur",
+        "soeur"
+      ]
+    },
+    "-on": {
+      "examples": [
+        "baron",
+        "patron",
+        "garçon",
+        "caleçon",
+        "glaçon",
+        "soupçon",
+        "segment",
+        "présent"
+      ],
+      "exceptions": [
+        "boisson",
+        "façon",
+        "liaison",
+        "maison",
+        "raison",
+        "rançon",
+        "saison",
+        "chanson",
+        "leçon"
+      ]
+    },
+    "-b": {
+      "examples": [
+        "club",
+        "plomb"
+      ],
+      "exceptions": [
+        "mob",
+        "pub"
+      ]
+    },
+    "-ble": {
+      "examples": [
+        "câble",
+        "sable"
+      ],
+      "exceptions": [
+        "bible",
+        "cible",
+        "étable",
+        "fable",
+        "table"
+      ]
+    },
+    "-c": {
+      "examples": [
+        "accroc",
+        "cognac"
+      ],
+      "exceptions": [
+        "alloc",
+        "collec",
+        "doc",
+        "embroc",
+        "fac",
+        "réduc"
+      ]
+    },
+    "-cle": {
+      "examples": [
+        "article",
+        "spectacle"
+      ],
+      "exceptions": [
+        "bâcle",
+        "bernacle",
+        "boucle",
+        "débâcle",
+        "manicle"
+      ]
+    },
+    "-d": {
+      "examples": [
+        "accord",
+        "boulevard"
+      ],
+      "exceptions": [
+        "barmaid"
+      ]
+    },
+    "-ège": {
+      "examples": [
+        "collège",
+        "piège",
+        "siège",
+        "manège"
+      ],
+      "exceptions": [
+        "allège",
+        "drège",
+        "Norvège"
+      ]
+    },
+    "-er": {
+      "examples": [
+        "abricotier",
+        "agencier"
+      ],
+      "exceptions": [
+        "cuiller",
+        "mer",
+        "forêt"
+      ]
+    },
+    "-et": {
+      "examples": [
+        "navet",
+        "trajet",
+        "billet",
+        "projet",
+        "jardinet"
+      ],
+      "exceptions": [
+        "basket",
+        "forêt"
+      ]
+    },
+    "-eu": {
+      "examples": [
+        "feu",
+        "lieu",
+        "aveu",
+        "neveu"
+      ],
+      "exceptions": [
+        "Fête-Dieu"
+      ]
+    },
+    "-f": {
+      "examples": [
+        "bœuf",
+        "nerf"
+      ],
+      "exceptions": [
+        "clef",
+        "nef",
+        "soif"
+      ]
+    },
+    "-i": {
+      "examples": [
+        "abri",
+        "canari"
+      ],
+      "exceptions": [
+        "foi",
+        "fourmi",
+        "loi",
+        "paroi",
+        "tati",
+        "merci"
+      ]
+    },
+    "-ing": {
+      "examples": [
+        "brushing",
+        "parking"
+      ],
+      "exceptions": [
+        "starking"
+      ]
+    },
+    "-k": {
+      "examples": [
+        "anorak",
+        "bifteck"
+      ],
+      "exceptions": [
+        "brick",
+        "realpolitik"
+      ]
+    },
+    "-l": {
+      "examples": [
+        "accueil",
+        "caramel"
+      ],
+      "exceptions": [
+        "béchamel",
+        "Javel",
+        "roseval",
+        "URL"
+      ]
+    },
+    "-m": {
+      "examples": [
+        "boom",
+        "calcium"
+      ],
+      "exceptions": [
+        "clim",
+        "faim",
+        "gym"
+      ]
+    },
+    "-n": {
+      "examples": [
+        "bain",
+        "frisson"
+      ],
+      "exceptions": [
+        "fin",
+        "façon",
+        "leçon",
+        "main",
+        "maman"
+      ]
+    },
+    "-o": {
+      "examples": [
+        "expresso",
+        "loto"
+      ],
+      "exceptions": [
+        "auto",
+        "bio",
+        "géo",
+        "météo",
+        "moto",
+        "dactylo",
+        "dynamo",
+        "steno",
+        "magnéto"
+      ]
+    },
+    "-ou": {
+      "examples": [
+        "bambou",
+        "chou",
+        "genou",
+        "hibou",
+        "joujou",
+        "pou",
+        "cadeau"
+      ],
+      "exceptions": [
+        "doudou",
+        "goudou",
+        "nounou"
+      ]
+    },
+    "-p": {
+      "examples": [
+        "champ",
+        "slip"
+      ],
+      "exceptions": [
+        "jeep",
+        "start-up"
+      ]
+    },
+    "-r": {
+      "examples": [
+        "fer",
+        "mer",
+        "chair",
+        "minceur",
+        "douceur",
+        "froideur",
+        "grandeur",
+        "profondeur"
+      ],
+      "exceptions": [
+        "fleur",
+        "couleur",
+        "valeur",
+        "largeur",
+        "erreur",
+        "horreur",
+        "cour",
+        "tour",
+        "soeur",
+        "peur",
+        "vapeur"
+      ]
+    },
+    "-t": {
+      "examples": [
+        "chat",
+        "plat",
+        "segment",
+        "présent",
+        "forêt",
+        "nuit",
+        "dent",
+        "part",
+        "plupart"
+      ],
+      "exceptions": [
+        "forêt",
+        "nuit",
+        "dent",
+        "part",
+        "plupart"
+      ]
+    },
+    "-taire": {
+      "examples": [
+        "dictionnaire"
+      ],
+      "exceptions": [
+        "affaire",
+        "grammaire",
+        "paire"
+      ]
+    },
+    "-ton": {
+      "examples": [
+        "bouton",
+        "patron"
+      ],
+      "exceptions": []
+    },
+    "-tre": {
+      "examples": [
+        "centre",
+        "théâtre"
+      ],
+      "exceptions": [
+        "fenêtre",
+        "huître",
+        "vitre",
+        "rencontre",
+        "montre",
+        "lettre"
+      ]
+    },
+    "-u": {
+      "examples": [
+        "bijou",
+        "caillou",
+        "chou",
+        "genou",
+        "hibou",
+        "joujou",
+        "pou",
+        "anu",
+        "tribu",
+        "vertu"
+      ],
+      "exceptions": [
+        "eau",
+        "peau"
+      ]
+    },
+    "-us": {
+      "examples": [
+        "bus",
+        "virus"
+      ],
+      "exceptions": []
+    },
+    "-an": {
+      "examples": [
+        "médian",
+        "maman"
+      ],
+      "exceptions": [
+        "maman"
+      ]
+    },
+    "-eme": {
+      "examples": [
+        "thème",
+        "schème"
+      ],
+      "exceptions": []
+    },
+    "-g": {
+      "examples": [
+        "rang",
+        "long"
+      ],
+      "exceptions": []
+    },
+    "-is": {
+      "examples": [
+        "avis",
+        "avis"
+      ],
+      "exceptions": [
+        "brebis",
+        "fois",
+        "souris",
+        "oasis"
+      ]
+    },
+    "-iste": {
+      "examples": [
+        "artiste",
+        "journaliste"
+      ],
+      "exceptions": [
+        "modiste",
+        "liste",
+        "piste"
+      ]
+    },
+    "-lon": {
+      "examples": [
+        "ballon",
+        "allon"
+      ],
+      "exceptions": []
+    },
+    "-ome": {
+      "examples": [
+        "chrome",
+        "tome"
+      ],
+      "exceptions": []
+    },
+    "-ron": {
+      "examples": [
+        "citron",
+        "électron"
+      ],
+      "exceptions": []
+    },
+    "-sme": {
+      "examples": [
+        "tourisme",
+        "scepticisme"
+      ],
+      "exceptions": []
+    }
+  },
+  "feminine_categories": {
+    "Sciences/disciplines": [
+      "chimie",
+      "géologie",
+      "philosophie",
+      "médecine",
+      "phonétique"
+    ],
+    "Continents": [
+      "Europe",
+      "Asie",
+      "Afrique",
+      "Amérique"
+    ],
+    "Countries ending in -e": [
+      "France",
+      "Allemagne",
+      "Chine",
+      "Bretagne",
+      "Provence",
+      "Saxe",
+      "Italie",
+      "Argentine"
+    ]
+  },
+  "masculine_categories": {
+    "Days of week": [
+      "lundi",
+      "mardi",
+      "mercredi",
+      "jeudi",
+      "vendredi",
+      "samedi",
+      "dimanche"
+    ],
+    "Months": [
+      "janvier",
+      "février",
+      "mars",
+      "avril",
+      "mai",
+      "juin",
+      "juillet",
+      "août",
+      "septembre",
+      "octobre",
+      "novembre",
+      "décembre"
+    ],
+    "Seasons": [
+      "été",
+      "printemps",
+      "automne",
+      "hiver"
+    ],
+    "Languages": [
+      "français",
+      "allemand",
+      "anglais",
+      "espagnol",
+      "chinois",
+      "tchèque"
+    ],
+    "Colors": [
+      "rouge",
+      "bleu",
+      "blanc",
+      "vert",
+      "jaune",
+      "noir"
+    ],
+    "Trees": [
+      "sapin",
+      "peuplier",
+      "chêne",
+      "érable"
+    ],
+    "Metals": [
+      "fer",
+      "or",
+      "argent",
+      "cuivre",
+      "plomb"
+    ],
+    "Cardinal points": [
+      "nord",
+      "sud",
+      "est",
+      "ouest"
+    ],
+    "Geometric figures": [
+      "cercle",
+      "carré",
+      "triangle",
+      "rectangle"
+    ]
+  },
+  "special_cases": {
+    "same_form_different_gender": [
+      [
+        "un livre",
+        "une livre"
+      ],
+      [
+        "un poste",
+        "la poste"
+      ],
+      [
+        "un mode",
+        "la mode"
+      ],
+      [
+        "un espace",
+        "une espace"
+      ],
+      [
+        "un tour",
+        "une tour"
+      ],
+      [
+        "un voile",
+        "une voile"
+      ]
+    ],
+    "masculine_singular_feminine_plural": [
+      [
+        "amour",
+        "amours"
+      ],
+      [
+        "orgue",
+        "orgues"
+      ],
+      [
+        "délice",
+        "délices"
+      ]
+    ],
+    "gens_rule": "masculin normally, but feminine when preceded by adjective: 'de vieilles gens' vs 'des gens vieux'"
+  },
+  "common_exceptions": {
+    "feminine_despite_masculine_ending": [
+      [
+        "page",
+        "-age"
+      ],
+      [
+        "plage",
+        "-age"
+      ],
+      [
+        "image",
+        "-age"
+      ],
+      [
+        "cage",
+        "-age"
+      ],
+      [
+        "nage",
+        "-age"
+      ],
+      [
+        "rage",
+        "-age"
+      ],
+      [
+        "peau",
+        "-eau"
+      ],
+      [
+        "eau",
+        "-eau"
+      ],
+      [
+        "fleur",
+        "-eur"
+      ],
+      [
+        "couleur",
+        "-eur"
+      ],
+      [
+        "chaleur",
+        "-eur"
+      ],
+      [
+        "peur",
+        "-eur"
+      ],
+      [
+        "douleur",
+        "-eur"
+      ],
+      [
+        "forêt",
+        "-et/-er"
+      ],
+      [
+        "nuit",
+        "-t"
+      ],
+      [
+        "dent",
+        "-t"
+      ],
+      [
+        "part",
+        "-t"
+      ],
+      [
+        "plupart",
+        "-t"
+      ],
+      [
+        "main",
+        "-in"
+      ],
+      [
+        "fin",
+        "-in"
+      ],
+      [
+        "leçon",
+        "-on"
+      ],
+      [
+        "maison",
+        "-on"
+      ],
+      [
+        "raison",
+        "-on"
+      ],
+      [
+        "saison",
+        "-on"
+      ],
+      [
+        "chanson",
+        "-on"
+      ],
+      [
+        "mer",
+        "-er/-ier"
+      ],
+      [
+        "cuiller",
+        "-ier"
+      ],
+      [
+        "soif",
+        "-f"
+      ],
+      [
+        "clef",
+        "-f"
+      ],
+      [
+        "nef",
+        "-f"
+      ],
+      [
+        "foi",
+        "-i"
+      ],
+      [
+        "fourmi",
+        "-i"
+      ],
+      [
+        "loi",
+        "-i"
+      ],
+      [
+        "paroi",
+        "-i"
+      ],
+      [
+        "faim",
+        "-m"
+      ],
+      [
+        "gym",
+        "-m"
+      ],
+      [
+        "clim",
+        "-m"
+      ],
+      [
+        "basket",
+        "-et"
+      ],
+      [
+        "forêt",
+        "-et"
+      ],
+      [
+        "bible",
+        "-ble"
+      ],
+      [
+        "cible",
+        "-ble"
+      ],
+      [
+        "étable",
+        "-ble"
+      ],
+      [
+        "fable",
+        "-ble"
+      ],
+      [
+        "table",
+        "-ble"
+      ],
+      [
+        "béchamel",
+        "-l"
+      ],
+      [
+        "Javel",
+        "-l"
+      ],
+      [
+        "fac",
+        "-c"
+      ],
+      [
+        "alloc",
+        "-c"
+      ],
+      [
+        "collec",
+        "-c"
+      ],
+      [
+        "doc",
+        "-c"
+      ],
+      [
+        "embroc",
+        "-c"
+      ],
+      [
+        "réduc",
+        "-c"
+      ],
+      [
+        "bâcle",
+        "-cle"
+      ],
+      [
+        "bernacle",
+        "-cle"
+      ],
+      [
+        "boucle",
+        "-cle"
+      ],
+      [
+        "débâcle",
+        "-cle"
+      ],
+      [
+        "manicle",
+        "-cle"
+      ],
+      [
+        "barmaid",
+        "-d"
+      ],
+      [
+        "allège",
+        "-ège"
+      ],
+      [
+        "drège",
+        "-ège"
+      ],
+      [
+        "Norvège",
+        "-ège"
+      ],
+      [
+        "Fête-Dieu",
+        "-eu"
+      ],
+      [
+        "auto",
+        "-o"
+      ],
+      [
+        "bio",
+        "-o"
+      ],
+      [
+        "géo",
+        "-o"
+      ],
+      [
+        "météo",
+        "-o"
+      ],
+      [
+        "moto",
+        "-o"
+      ],
+      [
+        "dactylo",
+        "-o"
+      ],
+      [
+        "dynamo",
+        "-o"
+      ],
+      [
+        "steno",
+        "-o"
+      ],
+      [
+        "magnéto",
+        "-o"
+      ],
+      [
+        "doudou",
+        "-ou"
+      ],
+      [
+        "goudou",
+        "-ou"
+      ],
+      [
+        "nounou",
+        "-ou"
+      ],
+      [
+        "jeep",
+        "-p"
+      ],
+      [
+        "start-up",
+        "-p"
+      ],
+      [
+        "starking",
+        "-ing"
+      ],
+      [
+        "brick",
+        "-k"
+      ],
+      [
+        "realpolitik",
+        "-k"
+      ],
+      [
+        "mob",
+        "-b"
+      ],
+      [
+        "pub",
+        "-b"
+      ],
+      [
+        "modiste",
+        "-iste"
+      ],
+      [
+        "liste",
+        "-iste"
+      ],
+      [
+        "piste",
+        "-iste"
+      ],
+      [
+        "brebis",
+        "-is"
+      ],
+      [
+        "fois",
+        "-is"
+      ],
+      [
+        "souris",
+        "-is"
+      ],
+      [
+        "oasis",
+        "-is"
+      ],
+      [
+        "maman",
+        "-an"
+      ],
+      [
+        "médian",
+        "-an"
+      ]
+    ],
+    "masculine_despite_feminine_ending": [
+      [
+        "silence",
+        "-ence"
+      ],
+      [
+        "musée",
+        "-ée"
+      ],
+      [
+        "lycée",
+        "-ée"
+      ],
+      [
+        "trophée",
+        "-ée"
+      ],
+      [
+        "apogée",
+        "-ée"
+      ],
+      [
+        "périgée",
+        "-ée"
+      ],
+      [
+        "pedigree",
+        "-ée"
+      ],
+      [
+        "colisée",
+        "-ée"
+      ],
+      [
+        "mausolée",
+        "-ée"
+      ],
+      [
+        "incendie",
+        "-ie"
+      ],
+      [
+        "génie",
+        "-ie"
+      ],
+      [
+        "parapluie",
+        "-ie"
+      ],
+      [
+        "brie",
+        "-ie"
+      ],
+      [
+        "foie",
+        "-ie"
+      ],
+      [
+        "messie",
+        "-ie"
+      ],
+      [
+        "sosie",
+        "-ie"
+      ],
+      [
+        "zombie",
+        "-ie"
+      ],
+      [
+        "cryptographie",
+        "-ie"
+      ],
+      [
+        "périhélie",
+        "-ie"
+      ],
+      [
+        "été",
+        "-té"
+      ],
+      [
+        "comité",
+        "-té"
+      ],
+      [
+        "comté",
+        "-té"
+      ],
+      [
+        "côté",
+        "-té"
+      ],
+      [
+        "député",
+        "-té"
+      ],
+      [
+        "écarté",
+        "-té"
+      ],
+      [
+        "invité",
+        "-té"
+      ],
+      [
+        "pâté",
+        "-té"
+      ],
+      [
+        "traité",
+        "-té"
+      ],
+      [
+        "arrêté",
+        "-té"
+      ],
+      [
+        "aparté",
+        "-té"
+      ],
+      [
+        "aligoté",
+        "-té"
+      ],
+      [
+        "karaté",
+        "-té"
+      ],
+      [
+        "stade",
+        "-ade"
+      ],
+      [
+        "jade",
+        "-ade"
+      ],
+      [
+        "grade",
+        "-ade"
+      ],
+      [
+        "prélude",
+        "-ude"
+      ],
+      [
+        "interlude",
+        "-ude"
+      ],
+      [
+        "coude",
+        "-ude"
+      ],
+      [
+        "boude",
+        "-ude"
+      ],
+      [
+        "murmure",
+        "-ure"
+      ],
+      [
+        "dinosaure",
+        "-ure"
+      ],
+      [
+        "centaure",
+        "-ure"
+      ],
+      [
+        "chlorure",
+        "-ure"
+      ],
+      [
+        "cyanure",
+        "-ure"
+      ],
+      [
+        "mercure",
+        "-ure"
+      ],
+      [
+        "sulfure",
+        "-ure"
+      ],
+      [
+        "kilowattheure",
+        "-ure"
+      ],
+      [
+        "parjure",
+        "-ure"
+      ],
+      [
+        "trichosure",
+        "-ure"
+      ],
+      [
+        "carbure",
+        "-ure"
+      ],
+      [
+        "squelette",
+        "-ette"
+      ],
+      [
+        "quartette",
+        "-ette"
+      ],
+      [
+        "quintette",
+        "-ette"
+      ],
+      [
+        "prépresse",
+        "-esse"
+      ],
+      [
+        "malaise",
+        "-ise"
+      ],
+      [
+        "turquoise",
+        "-ise"
+      ],
+      [
+        "anthracite",
+        "-ite"
+      ],
+      [
+        "ermite",
+        "-ite"
+      ],
+      [
+        "granite",
+        "-ite"
+      ],
+      [
+        "graphite",
+        "-ite"
+      ],
+      [
+        "kite",
+        "-ite"
+      ],
+      [
+        "mérite",
+        "-ite"
+      ],
+      [
+        "opposite",
+        "-ite"
+      ],
+      [
+        "plébiscite",
+        "-ite"
+      ],
+      [
+        "rite",
+        "-ite"
+      ],
+      [
+        "satellite",
+        "-ite"
+      ],
+      [
+        "site",
+        "-ite"
+      ],
+      [
+        "termit",
+        "-ite"
+      ],
+      [
+        "trilobite",
+        "-ite"
+      ],
+      [
+        "théodolite",
+        "-ite"
+      ],
+      [
+        "comité",
+        "-ite"
+      ],
+      [
+        "gîte",
+        "-ite"
+      ],
+      [
+        "arrière",
+        "-ière"
+      ],
+      [
+        "derrière",
+        "-ière"
+      ],
+      [
+        "cimetière",
+        "-ière"
+      ],
+      [
+        "domaine",
+        "-ine"
+      ],
+      [
+        "capitaine",
+        "-ine"
+      ],
+      [
+        "moine",
+        "-ine"
+      ],
+      [
+        "magazine",
+        "-ine"
+      ],
+      [
+        "patrimoine",
+        "-ine"
+      ],
+      [
+        "platine",
+        "-ine"
+      ],
+      [
+        "ciné",
+        "-ine"
+      ],
+      [
+        "pipeline",
+        "-ine"
+      ],
+      [
+        "bacille",
+        "-lle"
+      ],
+      [
+        "braille",
+        "-lle"
+      ],
+      [
+        "gorille",
+        "-lle"
+      ],
+      [
+        "intervalle",
+        "-lle"
+      ],
+      [
+        "mille",
+        "-lle"
+      ],
+      [
+        "portefeuille",
+        "-lle"
+      ],
+      [
+        "vaudeville",
+        "-lle"
+      ],
+      [
+        "vermicelle",
+        "-lle"
+      ],
+      [
+        "violoncelle",
+        "-lle"
+      ],
+      [
+        "scelle",
+        "-lle"
+      ],
+      [
+        "avion",
+        "-ion"
+      ],
+      [
+        "bastion",
+        "-ion"
+      ],
+      [
+        "billion",
+        "-ion"
+      ],
+      [
+        "camion",
+        "-ion"
+      ],
+      [
+        "cation",
+        "-ion"
+      ],
+      [
+        "dominion",
+        "-ion"
+      ],
+      [
+        "lampion",
+        "-ion"
+      ],
+      [
+        "lion",
+        "-ion"
+      ],
+      [
+        "million",
+        "-ion"
+      ],
+      [
+        "pion",
+        "-ion"
+      ],
+      [
+        "scion",
+        "-ion"
+      ],
+      [
+        "trillion",
+        "-ion"
+      ],
+      [
+        "ion",
+        "-ion"
+      ],
+      [
+        "espion",
+        "-ion"
+      ],
+      [
+        "démilitarisation",
+        "-ion"
+      ],
+      [
+        "antivivisection",
+        "-ion"
+      ],
+      [
+        "attribution",
+        "-ion"
+      ],
+      [
+        "cantique",
+        "-ique"
+      ],
+      [
+        "générique",
+        "-ique"
+      ],
+      [
+        "graphique",
+        "-ique"
+      ],
+      [
+        "lexique",
+        "-ique"
+      ],
+      [
+        "moustique",
+        "-ique"
+      ],
+      [
+        "périphérique",
+        "-ique"
+      ],
+      [
+        "pique-nique",
+        "-ique"
+      ],
+      [
+        "vase",
+        "-se"
+      ],
+      [
+        "malaise",
+        "-se"
+      ],
+      [
+        "suspense",
+        "-se"
+      ],
+      [
+        "sconse",
+        "-se"
+      ],
+      [
+        "opposé",
+        "-se"
+      ],
+      [
+        "exposé",
+        "-se"
+      ],
+      [
+        "gypse",
+        "-se"
+      ],
+      [
+        "inverse",
+        "-se"
+      ],
+      [
+        "colosse",
+        "-se"
+      ],
+      [
+        "carrosse",
+        "-se"
+      ],
+      [
+        "pamplemousse",
+        "-se"
+      ],
+      [
+        "prélude",
+        "-ude"
+      ],
+      [
+        "interlude",
+        "-ude"
+      ],
+      [
+        "coude",
+        "-ude"
+      ],
+      [
+        "boude",
+        "-ude"
+      ],
+      [
+        "jument",
+        "-ment"
+      ],
+      [
+        "garçon",
+        "-çon"
+      ],
+      [
+        "caleçon",
+        "-çon"
+      ],
+      [
+        "glaçon",
+        "-çon"
+      ],
+      [
+        "soupçon",
+        "-çon"
+      ],
+      [
+        "exercice",
+        "-ice"
+      ],
+      [
+        "sacrifice",
+        "-ice"
+      ],
+      [
+        "service",
+        "-ice"
+      ],
+      [
+        "bénéfice",
+        "-ice"
+      ],
+      [
+        "office",
+        "-ice"
+      ],
+      [
+        "artifice",
+        "-ice"
+      ],
+      [
+        "précipice",
+        "-ice"
+      ],
+      [
+        "dentifrice",
+        "-ice"
+      ],
+      [
+        "armistice",
+        "-ice"
+      ],
+      [
+        "vice",
+        "-ice"
+      ],
+      [
+        "prince",
+        "-ice"
+      ],
+      [
+        "commerce",
+        "-ice"
+      ],
+      [
+        "pouce",
+        "-ice"
+      ],
+      [
+        "espace",
+        "-ice"
+      ],
+      [
+        "crustace",
+        "-ice"
+      ],
+      [
+        "conservatoire",
+        "-oire"
+      ],
+      [
+        "laboratoire",
+        "-oire"
+      ],
+      [
+        "pourboire",
+        "-oire"
+      ],
+      [
+        "interrogatoire",
+        "-oire"
+      ]
+    ]
+  }
+}

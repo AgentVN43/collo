@@ -1,0 +1,207 @@
+[
+  {
+    "word": "manger",
+    "word_type": "v.",
+    "category": "nhom-er",
+    "meaning_vi": "",
+    "meaning_en": "",
+    "basics_vi": "",
+    "conjugations": {
+      "present": {
+        "rule_vi": "",
+        "forms": {
+          "j": "mange",
+          "tu": "manges",
+          "il_elle": "mange",
+          "nous": "mangeons",
+          "vous": "mangez",
+          "elles": "mangent"
+        },
+        "examples": [],
+        "cloze": []
+      },
+      "passe_compose": {
+        "rule_vi": "",
+        "forms": {
+          "j": "ai mangé",
+          "tu": "as mangé",
+          "il_elle": "a mangé",
+          "nous": "avons mangé",
+          "vous": "avez mangé",
+          "elles": "ont mangé"
+        },
+        "examples": [],
+        "cloze": []
+      },
+      "futur_proche": {
+        "rule_vi": "",
+        "forms": {
+          "j": "vais manger",
+          "tu": "vas manger",
+          "il_elle": "va manger",
+          "nous": "allons manger",
+          "vous": "allez manger",
+          "elles": "vont manger"
+        },
+        "examples": [],
+        "cloze": []
+      },
+      "imparfait": {
+        "rule_vi": "",
+        "forms": {
+          "j": "mangeais",
+          "tu": "mangeais",
+          "il_elle": "mangeait",
+          "nous": "mangions",
+          "vous": "mangiez",
+          "elles": "mangeaient"
+        },
+        "examples": [],
+        "cloze": []
+      },
+      "futur_simple": {
+        "rule_vi": "",
+        "forms": {
+          "j": "mangerai",
+          "tu": "mangeras",
+          "il_elle": "mangera",
+          "nous": "mangerons",
+          "vous": "mangerez",
+          "elles": "mangeront"
+        },
+        "examples": [],
+        "cloze": []
+      },
+      "plus_que_parfait": {
+        "rule_vi": "",
+        "forms": {
+          "j": "avais mangé",
+          "tu": "avais mangé",
+          "il_elle": "avait mangé",
+          "nous": "avions mangé",
+          "vous": "aviez mangé",
+          "elles": "avaient mangé"
+        },
+        "examples": [],
+        "cloze": []
+      },
+      "futur_anterieur": {
+        "rule_vi": "",
+        "forms": {
+          "j": "aurai mangé",
+          "tu": "auras mangé",
+          "il_elle": "aura mangé",
+          "nous": "aurons mangé",
+          "vous": "aurez mangé",
+          "elles": "auront mangé"
+        },
+        "examples": [],
+        "cloze": []
+      },
+      "passe_simple": {
+        "rule_vi": "",
+        "forms": {
+          "j": "mangeai",
+          "tu": "mangeas",
+          "il_elle": "mangea",
+          "nous": "mangeâmes",
+          "vous": "mangeâtes",
+          "elles": "mangèrent"
+        },
+        "examples": [],
+        "cloze": []
+      },
+      "passe_anterieur": {
+        "rule_vi": "",
+        "forms": {
+          "j": "eus mangé",
+          "tu": "eus mangé",
+          "il_elle": "eut mangé",
+          "nous": "eûmes mangé",
+          "vous": "eûtes mangé",
+          "elles": "eurent mangé"
+        },
+        "examples": [],
+        "cloze": []
+      },
+      "subj_present": {
+        "rule_vi": "",
+        "forms": {
+          "j": "mange",
+          "tu": "manges",
+          "il_elle": "mange",
+          "nous": "mangions",
+          "vous": "mangiez",
+          "elles": "mangent"
+        },
+        "examples": [],
+        "cloze": []
+      },
+      "subj_passe": {
+        "rule_vi": "",
+        "forms": {
+          "j": "aie mangé",
+          "tu": "aies mangé",
+          "il_elle": "ait mangé",
+          "nous": "ayons mangé",
+          "vous": "ayez mangé",
+          "elles": "aient mangé"
+        },
+        "examples": [],
+        "cloze": []
+      },
+      "subj_imparfait": {
+        "rule_vi": "",
+        "forms": {
+          "j": "mangeasse",
+          "tu": "mangeasses",
+          "il_elle": "mangeât",
+          "nous": "mangeassions",
+          "vous": "mangeassiez",
+          "elles": "mangeassent"
+        },
+        "examples": [],
+        "cloze": []
+      },
+      "subj_plus_que_parfait": {
+        "rule_vi": "",
+        "forms": {
+          "j": "eusse mangé",
+          "tu": "eusses mangé",
+          "il_elle": "eût mangé",
+          "nous": "eussions mangé",
+          "vous": "eussiez mangé",
+          "elles": "eussent mangé"
+        },
+        "examples": [],
+        "cloze": []
+      },
+      "cond_present": {
+        "rule_vi": "",
+        "forms": {
+          "j": "mangerais",
+          "tu": "mangerais",
+          "il_elle": "mangerait",
+          "nous": "mangerions",
+          "vous": "mangeriez",
+          "elles": "mangeraient"
+        },
+        "examples": [],
+        "cloze": []
+      },
+      "cond_passe": {
+        "rule_vi": "",
+        "forms": {
+          "j": "aurais mangé",
+          "tu": "aurais mangé",
+          "il_elle": "aurait mangé",
+          "nous": "aurions mangé",
+          "vous": "auriez mangé",
+          "elles": "auraient mangé"
+        },
+        "examples": [],
+        "cloze": []
+      }
+    }
+  }
+]

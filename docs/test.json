@@ -1,0 +1,229 @@
+[
+  {
+    "word": "croire",
+    "word_type": "v.",
+    "topics": ["ban-than", "bat-quy-tac"],
+    "meaning_vi": "tin tưởng, tin rằng",
+    "meaning_en": "to believe",
+    "basics_vi": "Động từ nhóm 3 (irregular). Thì kép dùng trợ động từ 'avoir'. Ngoại lệ: gốc chia ở présent là 'croi-', không theo quy tắc -ir chuẩn.",
+    "conjugations": {
+      "present": {
+        "rule_vi": "Gốc chia: 'croi-'. Je/tu/il_elle: crois/crois/croit; nous: croyons; vous: croyez; elles: croient.",
+        "forms": {
+          "j": "crois",
+          "tu": "crois",
+          "il_elle": "croit",
+          "nous": "croyons",
+          "vous": "croyez",
+          "elles": "croient"
+        },
+        "examples": [
+          { "fr": "Je crois en toi.", "vi": "Tôi tin tưởng bạn." },
+          {
+            "fr": "Ils croient à cette histoire.",
+            "vi": "Họ tin vào câu chuyện đó."
+          }
+        ],
+        "cloze": [
+          {
+            "before": "Je ",
+            "after": " que tu réussiras.",
+            "answer": "crois",
+            "hint": "croire",
+            "explain_vi": "\"Que\" + tương lai → présent. Je + -s: crois."
+          },
+          {
+            "before": "Nous ",
+            "after": " aux fantômes.",
+            "answer": "croyons",
+            "hint": "croire",
+            "explain_vi": "Tín ngưỡng cá nhân → présent. Nous + -ons: croyons."
+          },
+          {
+            "before": "Tu ",
+            "after": " tout ce qu’il dit ?",
+            "answer": "crois",
+            "hint": "croire",
+            "explain_vi": "Hỏi thói quen → présent. Tu + -s: crois."
+          }
+        ]
+      },
+      "passe_compose": {
+        "rule_vi": "Trợ động từ 'avoir' + quá khứ phân từ 'cru'. Không hợp giống.",
+        "forms": {
+          "j": "ai cru",
+          "tu": "as cru",
+          "il_elle": "a cru",
+          "nous": "avons cru",
+          "vous": "avez cru",
+          "elles": "ont cru"
+        },
+        "examples": [
+          {
+            "fr": "J’ai cru voir un fantôme.",
+            "vi": "Tôi đã tin là mình thấy ma."
+          },
+          {
+            "fr": "Elle a cru à cette rumeur.",
+            "vi": "Cô ấy đã tin vào lời đồn đó."
+          }
+        ],
+        "cloze": [
+          {
+            "before": "Il ",
+            "after": " ton histoire hier.",
+            "answer": "a cru",
+            "hint": "croire",
+            "explain_vi": "\"Hier\" → passé composé. Il + avoir (a) + cru."
+          },
+          {
+            "before": "Nous ",
+            "after": " à tort.",
+            "answer": "avons cru",
+            "hint": "croire",
+            "explain_vi": "\"À tort\" (sai lầm) → hành động hoàn thành. Nous + avons + cru."
+          },
+          {
+            "before": "Tu ",
+            "after": " ce qu’il a dit ?",
+            "answer": "as cru",
+            "hint": "croire",
+            "explain_vi": "Hỏi về hành động quá khứ → passé composé. Tu + as + cru."
+          }
+        ]
+      },
+      "futur_proche": {
+        "rule_vi": "Trợ động từ 'aller' chia ở présent + nguyên mẫu 'croire'.",
+        "forms": {
+          "j": "vais croire",
+          "tu": "vas croire",
+          "il_elle": "va croire",
+          "nous": "allons croire",
+          "vous": "allez croire",
+          "elles": "vont croire"
+        },
+        "examples": [
+          {
+            "fr": "Je vais croire à ton histoire.",
+            "vi": "Tôi sẽ tin vào câu chuyện của bạn."
+          },
+          {
+            "fr": "Ils vont croire que c’est vrai.",
+            "vi": "Họ sẽ tin rằng điều đó là sự thật."
+          }
+        ],
+        "cloze": [
+          {
+            "before": "Je ",
+            "after": " à tes paroles.",
+            "answer": "vais croire",
+            "hint": "croire",
+            "explain_vi": "\"Vais\" → futur proche. Je + vais + croire."
+          },
+          {
+            "before": "Elle ",
+            "after": " tout ce qu’on lui dit.",
+            "answer": "va croire",
+            "hint": "croire",
+            "explain_vi": "Hành động sắp xảy ra → futur proche. Elle + va + croire."
+          },
+          {
+            "before": "Vous ",
+            "after": " à cette légende ?",
+            "answer": "allez croire",
+            "hint": "croire",
+            "explain_vi": "Hỏi về dự định → futur proche. Vous + allez + croire."
+          }
+        ]
+      },
+      "imparfait": {
+        "rule_vi": "Gốc chia: 'croy-'. Je/tu: croyais; il_elle: croyait; nous: croyions; vous: croyiez; elles: croyaient.",
+        "forms": {
+          "j": "croyais",
+          "tu": "croyais",
+          "il_elle": "croyait",
+          "nous": "croyions",
+          "vous": "croyiez",
+          "elles": "croyaient"
+        },
+        "examples": [
+          {
+            "fr": "Quand j’étais petit, je croyais aux fées.",
+            "vi": "Khi tôi còn nhỏ, tôi tin vào các nàng tiên."
+          },
+          {
+            "fr": "Nous croyions à cette théorie.",
+            "vi": "Chúng tôi đã tin vào lý thuyết đó."
+          }
+        ],
+        "cloze": [
+          {
+            "before": "Tu ",
+            "after": " à tout ce qu’on te disait.",
+            "answer": "croyais",
+            "hint": "croire",
+            "explain_vi": "\"Quand j’étais petit\" → imparfait. Tu + -ais: croyais."
+          },
+          {
+            "before": "Ils ",
+            "after": " que la Terre était plate.",
+            "answer": "croyaient",
+            "hint": "croire",
+            "explain_vi": "Mô tả trạng thái quá khứ → imparfait. Ils + -aient: croyaient."
+          },
+          {
+            "before": "Nous ",
+            "after": " aux miracles.",
+            "answer": "croyions",
+            "hint": "croire",
+            "explain_vi": "Thói quen quá khứ → imparfait. Nous + -ions: croyions."
+          }
+        ]
+      },
+      "futur_simple": {
+        "rule_vi": "Gốc chia: 'croir-'. Je: croirai; tu: croiras; il_elle: croira; nous: croirons; vous: croirez; elles: croiront.",
+        "forms": {
+          "j": "croirai",
+          "tu": "croiras",
+          "il_elle": "croira",
+          "nous": "croirons",
+          "vous": "croirez",
+          "elles": "croiront"
+        },
+        "examples": [
+          {
+            "fr": "Je croirai à tes mots un jour.",
+            "vi": "Một ngày tôi sẽ tin vào lời của bạn."
+          },
+          {
+            "fr": "Ils croiront à cette idée.",
+            "vi": "Họ sẽ tin vào ý tưởng đó."
+          }
+        ],
+        "cloze": [
+          {
+            "before": "Demain, je ",
+            "after": " à ton histoire.",
+            "answer": "croirai",
+            "hint": "croire",
+            "explain_vi": "\"Demain\" → futur simple. Je + -ai: croirai."
+          },
+          {
+            "before": "Tu ",
+            "after": " à la science un jour.",
+            "answer": "croiras",
+            "hint": "croire",
+            "explain_vi": "Dự đoán tương lai → futur simple. Tu + -as: croiras."
+          },
+          {
+            "before": "Nous ",
+            "after": " en toi.",
+            "answer": "croirons",
+            "hint": "croire",
+            "explain_vi": "Lời hứa → futur simple. Nous + -ons: croirons."
+          }
+        ]
+      }
+    }
+  }
+]

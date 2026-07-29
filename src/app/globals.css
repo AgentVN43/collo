@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  /* giữ chỗ cho thanh cuộn để layout căn giữa không bị dựt khi đổi trang dài/ngắn */
+  scrollbar-gutter: stable;
+}
+
+body {
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
