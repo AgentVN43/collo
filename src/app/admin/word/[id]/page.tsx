@@ -95,7 +95,7 @@ export default function AdminWordPage() {
     const blockers: string[] = [];
     if (!category) blockers.push("chưa chọn category");
     if (!word.meaning_vi.trim()) blockers.push("chưa có nghĩa tiếng Việt");
-    if (Object.keys(word.conjugations).length === 0) blockers.push("chưa có bảng chia");
+    if (word.partnerships.length === 0) blockers.push("chưa có partnership nào");
     return blockers;
   }, [word, category]);
 
@@ -172,7 +172,7 @@ export default function AdminWordPage() {
 
         {/* Bước duyệt: chọn category trước khi publish */}
         <div>
-          <label className="mb-1 block text-sm font-semibold text-gray-500">Category (nhóm chia)</label>
+          <label className="mb-1 block text-sm font-semibold text-gray-500">Category (loại collocation)</label>
           <select
             value={category}
             onChange={(e) => changeCategory(e.target.value)}
@@ -336,8 +336,8 @@ export default function AdminWordPage() {
           />
         </div>
         <p className="text-xs text-gray-400">
-          Sửa được nghĩa, loại từ và kiến thức cơ bản ngay tại đây. Bảng chia động từ (ví dụ,
-          cloze…) cập nhật qua chạy AI hoặc pipeline import — xem docs/CONTENT.md.
+          Sửa được nghĩa, loại từ và kiến thức cơ bản ngay tại đây. Word partnerships (ví dụ,
+          cloze…) cập nhật qua chạy AI hoặc import trực tiếp bằng SQL.
         </p>
       </div>
       {userId && feedbackOpen && (

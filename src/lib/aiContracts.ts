@@ -15,26 +15,26 @@ export const TASK_CONTRACTS: Record<AiTaskType, TaskContract> = {
   word_full: {
     label: "Soạn toàn bộ nội dung cho 1 từ",
     description:
-      "AI điền meaning, basics_vi, rule_vi, examples, cloze cho mọi thì có sẵn của từ. Forms/alt do hệ thống bảo toàn — AI trả gì cũng bị ghi đè lại bằng bảng chia gốc.",
+      "AI điền meaning, basics_vi, rule_vi, examples, cloze cho mọi partnership có sẵn của từ. Phrase/alt do hệ thống bảo toàn — AI trả gì cũng bị ghi đè lại bằng cụm gốc.",
     vars: {
-      word: "nguyên mẫu của từ (vd: aller)",
-      category: "slug nhóm chia (nhom-er / nhom-ir / nhom-3)",
+      word: "headword (vd: sync)",
+      category: "slug loại collocation (word-partnership / verb-noun / adjective-noun)",
       meaning_vi: "nghĩa tiếng Việt hiện có (có thể rỗng)",
-      meaning_en: "nghĩa tiếng Anh hiện có (có thể rỗng)",
-      tenses_list: "danh sách key thì hiện có, phân cách bằng dấu phẩy",
-      skeleton_json: "JSON đầy đủ của từ (word, category, conjugations với forms chuẩn)",
+      meaning_en: "định nghĩa tiếng Anh hiện có (có thể rỗng)",
+      partnerships_list: "danh sách key + phrase hiện có, phân cách bằng dấu phẩy",
+      skeleton_json: "JSON đầy đủ của từ (word, category, partnerships với phrase chuẩn)",
     },
   },
   word_theory: {
     label: "Soạn lý thuyết (basics + rules) cho 1 từ",
     description:
-      "AI chỉ điền basics_vi và rule_vi từng thì. Examples/cloze/forms giữ nguyên không đổi.",
+      "AI chỉ điền basics_vi, meaning_vi và rule_vi từng partnership. Examples/cloze/phrase giữ nguyên không đổi.",
     vars: {
-      word: "nguyên mẫu của từ",
-      category: "slug nhóm chia",
+      word: "headword",
+      category: "slug loại collocation",
       meaning_vi: "nghĩa tiếng Việt hiện có",
-      tenses_list: "danh sách key thì hiện có",
-      skeleton_json: "JSON đầy đủ của từ (forms chuẩn để tham chiếu)",
+      partnerships_list: "danh sách key + phrase hiện có",
+      skeleton_json: "JSON đầy đủ của từ (partnerships với phrase chuẩn để tham chiếu)",
     },
   },
 };

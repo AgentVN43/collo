@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 /**
  * POST /api/words/import-draft
  * Header:  x-api-key: <IMPORT_API_KEY>
- * Body:    { "word": "parler" } hoặc [{ "word": "parler" }, { "word": "manger" }]
+ * Body:    { "word": "sync" } hoặc [{ "word": "sync" }, { "word": "resolve" }]
  *
  * Import nháp: chỉ cần `word`, status mặc định 'draft'.
  * Dùng để tạo bản ghi chưa hoàn thiện, sau đó update dần rồi publish.
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
       meaning_vi: typeof w?.meaning_vi === "string" ? w.meaning_vi : "",
       meaning_en: typeof w?.meaning_en === "string" ? w.meaning_en : "",
       basics_vi: typeof w?.basics_vi === "string" ? w.basics_vi : "",
-      conjugations: typeof w?.conjugations === "object" && w.conjugations !== null ? w.conjugations : {},
+      partnerships: Array.isArray(w?.partnerships) ? w.partnerships : [],
       status: "draft", // endpoint này chỉ tạo/cập nhật nháp; publish qua /api/words/import
     };
   });

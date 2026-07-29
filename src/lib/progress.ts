@@ -1,5 +1,4 @@
-import type { ProgressRow, TenseKey, Word } from "./types";
-import { TENSE_KEYS } from "./types";
+import type { ProgressRow, Word } from "./types";
 
 /** Spacing ladder (days) indexed by mastery after the session. */
 const DUE_DAYS = [1, 1, 3, 7, 14, 14];
@@ -13,7 +12,7 @@ export interface SessionResult {
 export function sessionScore(r: SessionResult): number {
   const total = r.correct + r.near + r.wrong;
   if (total === 0) return 0;
-  // near-misses (accent-only errors) count half
+  // near-misses (lỗi gõ nhỏ) tính nửa điểm
   return (r.correct + r.near * 0.5) / total;
 }
 
@@ -36,11 +35,16 @@ export function applySession(row: ProgressRow, r: SessionResult): ProgressRow {
   };
 }
 
-export function emptyRow(userId: string, wordId: string, tense: TenseKey, level: number): ProgressRow {
+export function emptyRow(
+  userId: string,
+  wordId: string,
+  partnershipKey: string,
+  level: number
+): ProgressRow {
   return {
     user_id: userId,
     word_id: wordId,
-    tense,
+    partnership_key: partnershipKey,
     level,
     attempts: 0,
     fails: 0,
@@ -52,22 +56,21 @@ export function emptyRow(userId: string, wordId: string, tense: TenseKey, level:
 }
 
 /**
- * Pick the tense to drill for a word: lowest mastery first, in curriculum order.
- * `allowed` = các thì đang bật trong Settings; null nếu từ không có thì nào khả dụng.
+ * Chọn partnership để luyện Level 2 (cloze): mastery thấp nhất trước, trong số các
+ * partnership có sẵn cloze. `allowed` = category đang bật trong Settings; null nếu
+ * category của từ không nằm trong danh sách bật.
  */
-export function pickTense(word: Word, rows: ProgressRow[], allowed?: TenseKey[]): TenseKey | null {
-  const available = TENSE_KEYS.filter(
-    (t) => word.conjugations[t] && (!allowed || allowed.includes(t))
-  );
+export function pickPartnership(word: Word, rows: ProgressRow[]): string | null {
+  const available = word.partnerships.filter((p) => (p.cloze?.length ?? 0) > 0);
   if (available.length === 0) return null;
-  let best: TenseKey = available[0];
+  let best = available[0].key;
   let bestMastery = Infinity;
-  for (const t of available) {
-    const row = rows.find((r) => r.word_id === word.id && r.tense === t && r.level === 1);
+  for (const p of available) {
+    const row = rows.find((r) => r.word_id === word.id && r.partnership_key === p.key && r.level === 2);
     const m = row?.mastery ?? -1; // never practiced sorts first
     if (m < bestMastery) {
       bestMastery = m;
-      best = t;
+      best = p.key;
     }
   }
   return best;
@@ -75,17 +78,18 @@ export function pickTense(word: Word, rows: ProgressRow[], allowed?: TenseKey[])
 
 /** Word-level mastery for the Home dot: gray = never practiced, yellow = in progress, green = solid. */
 export function wordDot(word: Word, rows: ProgressRow[]): "gray" | "yellow" | "green" {
-  const mine = rows.filter((r) => r.word_id === word.id && r.level === 1);
+  const mine = rows.filter((r) => r.word_id === word.id);
   if (mine.length === 0) return "gray";
-  const tenses = TENSE_KEYS.filter((t) => word.conjugations[t]);
-  const solid = tenses.every((t) => (mine.find((r) => r.tense === t)?.mastery ?? 0) >= 4);
+  const l2 = mine.filter((r) => r.level === 2);
+  const keys = word.partnerships.map((p) => p.key);
+  if (keys.length === 0) return "gray";
+  const solid = keys.every((k) => (l2.find((r) => r.partnership_key === k)?.mastery ?? 0) >= 4);
   return solid ? "green" : "yellow";
 }
 
 /**
  * Priority queue for practice-session word picking:
  * 1) overdue reviews, 2) highest fail-rate, 3) new words, 4) lowest mastery.
- * (Ưu tiên "cùng chủ đề" đã bỏ khi chuyển sang category nhóm chia.)
  */
 export function buildQueue(words: Word[], rows: ProgressRow[]): Word[] {
   const today = new Date().toISOString().slice(0, 10);

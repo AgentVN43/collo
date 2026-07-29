@@ -1,27 +1,28 @@
 "use client";
 
-import { DEFAULT_ENABLED_TENSES, TENSE_KEYS, type TenseKey } from "./types";
+const CATEGORIES_KEY = "folask.enabled_categories";
 
-const STORAGE_KEY = "folask.enabled_tenses";
-
-/** Các thì đang bật trong Settings > Tense to Practice (lưu theo thiết bị). */
-export function getEnabledTenses(): TenseKey[] {
-  if (typeof window === "undefined") return DEFAULT_ENABLED_TENSES;
+/**
+ * Category đang bật trong Settings > Category to Practice (lưu theo thiết bị).
+ * `allSlugs` là danh sách slug hiện có trong DB — dùng để lọc bỏ slug rác/cũ.
+ */
+export function getEnabledCategories(allSlugs: string[]): string[] {
+  if (typeof window === "undefined") return allSlugs;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULT_ENABLED_TENSES;
+    const raw = window.localStorage.getItem(CATEGORIES_KEY);
+    if (!raw) return allSlugs;
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return DEFAULT_ENABLED_TENSES;
-    const valid = parsed.filter((t): t is TenseKey => (TENSE_KEYS as readonly string[]).includes(t));
-    return valid.length > 0 ? valid : DEFAULT_ENABLED_TENSES;
+    if (!Array.isArray(parsed)) return allSlugs;
+    const valid = parsed.filter((s): s is string => allSlugs.includes(s));
+    return valid.length > 0 ? valid : allSlugs;
   } catch {
-    return DEFAULT_ENABLED_TENSES;
+    return allSlugs;
   }
 }
 
-export function setEnabledTenses(tenses: TenseKey[]) {
+export function setEnabledCategories(slugs: string[]) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(tenses));
+  window.localStorage.setItem(CATEGORIES_KEY, JSON.stringify(slugs));
 }
 
 // ---- Cài đặt phiên luyện tập ----

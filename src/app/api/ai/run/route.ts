@@ -60,20 +60,20 @@ export async function POST(req: NextRequest) {
   if (!word) return NextResponse.json({ error: `Không tìm thấy từ "${body.word}"` }, { status: 404 });
 
   // Dựng context theo contract
-  const conjugations = (word.conjugations ?? {}) as Record<string, Json>;
+  const partnerships = (word.partnerships ?? []) as Json[];
   const skeleton = {
     word: word.word,
     category: word.category_slug ?? "",
     meaning_vi: word.meaning_vi,
     meaning_en: word.meaning_en,
-    conjugations,
+    partnerships,
   };
   const ctx: Record<string, string> = {
     word: word.word,
     category: word.category_slug ?? "(chưa phân loại)",
     meaning_vi: word.meaning_vi,
     meaning_en: word.meaning_en,
-    tenses_list: Object.keys(conjugations).join(", "),
+    partnerships_list: partnerships.map((p) => `${p.key}: ${p.phrase}`).join(", "),
     skeleton_json: JSON.stringify(skeleton, null, 1),
   };
   const rendered = renderPrompt(prompt.template, ctx);
@@ -128,44 +128,47 @@ export async function POST(req: NextRequest) {
   const aiWord = parseAiJson(content);
   if (!aiWord) return await fail("Output không phải JSON hợp lệ", content.slice(0, 4000));
 
-  // Merge theo policy của task_type — forms/alt LUÔN lấy từ DB, AI không được đổi
+  // Merge theo policy của task_type — phrase/alt LUÔN lấy từ DB, AI không được đổi
   const taskType = task.task_type as AiTaskType;
-  const aiConj = (aiWord.conjugations ?? {}) as Record<string, Json>;
-  const mergedConj: Record<string, Json> = {};
+  const aiPartnerships = Array.isArray(aiWord.partnerships) ? (aiWord.partnerships as Json[]) : [];
+  const aiByKey = new Map(aiPartnerships.map((p) => [p.key, p]));
+  const mergedPartnerships: Json[] = [];
   const clozeErrors: string[] = [];
 
-  for (const [tense, dbData] of Object.entries(conjugations)) {
-    const ai = aiConj[tense] ?? {};
-    const dbForms = (dbData.forms ?? {}) as Record<string, string>;
-    const dbAlt = dbData.alt as Record<string, string[]> | undefined;
-    const accepted = new Set([...Object.values(dbForms), ...Object.values(dbAlt ?? {}).flat()]);
+  for (const dbP of partnerships) {
+    const ai = aiByKey.get(dbP.key) ?? {};
+    const dbAlt = (dbP.alt as string[] | undefined) ?? [];
+    const accepted = new Set([dbP.phrase as string, ...dbAlt]);
 
     if (taskType === "word_theory") {
-      mergedConj[tense] = {
-        ...dbData,
-        rule_vi: typeof ai.rule_vi === "string" && ai.rule_vi ? ai.rule_vi : dbData.rule_vi,
-      };
+      mergedPartnerships.push({
+        ...dbP,
+        rule_vi: typeof ai.rule_vi === "string" && ai.rule_vi ? ai.rule_vi : dbP.rule_vi,
+        meaning_vi: typeof ai.meaning_vi === "string" && ai.meaning_vi ? ai.meaning_vi : dbP.meaning_vi,
+      });
     } else {
       const cloze = Array.isArray(ai.cloze) ? (ai.cloze as Json[]) : [];
       for (const [i, c] of cloze.entries()) {
         if (typeof c.answer !== "string" || !accepted.has(c.answer)) {
-          clozeErrors.push(`${tense}.cloze[${i}]: answer "${String(c.answer)}" không khớp forms/alt`);
+          clozeErrors.push(`${dbP.key}.cloze[${i}]: answer "${String(c.answer)}" không khớp phrase/alt`);
         }
       }
-      mergedConj[tense] = {
-        rule_vi: typeof ai.rule_vi === "string" ? ai.rule_vi : (dbData.rule_vi ?? ""),
-        forms: dbForms, // bảo toàn
-        ...(dbAlt ? { alt: dbAlt } : {}),
-        examples: Array.isArray(ai.examples) ? ai.examples : (dbData.examples ?? []),
+      mergedPartnerships.push({
+        key: dbP.key,
+        phrase: dbP.phrase, // bảo toàn
+        ...(dbP.alt ? { alt: dbP.alt } : {}),
+        rule_vi: typeof ai.rule_vi === "string" ? ai.rule_vi : (dbP.rule_vi ?? ""),
+        meaning_vi: typeof ai.meaning_vi === "string" ? ai.meaning_vi : (dbP.meaning_vi ?? ""),
+        examples: Array.isArray(ai.examples) ? ai.examples : (dbP.examples ?? []),
         cloze,
-      };
+      });
     }
   }
   if (clozeErrors.length > 0) {
     return await fail(`Cloze không hợp lệ: ${clozeErrors.join("; ")}`, content.slice(0, 4000));
   }
 
-  const patch: Json = { conjugations: mergedConj, status: "processing" };
+  const patch: Json = { partnerships: mergedPartnerships, status: "processing" };
   if (taskType === "word_full") {
     if (typeof aiWord.meaning_vi === "string" && aiWord.meaning_vi) patch.meaning_vi = aiWord.meaning_vi;
     if (typeof aiWord.meaning_en === "string" && aiWord.meaning_en) patch.meaning_en = aiWord.meaning_en;

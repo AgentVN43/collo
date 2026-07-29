@@ -9,15 +9,15 @@ import { useSession } from "@/lib/useSession";
 import { isAdmin } from "@/lib/admin";
 import {
   clampQuantity,
-  getEnabledTenses,
+  getEnabledCategories,
   getPracticeSettings,
-  setEnabledTenses,
+  setEnabledCategories,
   setPracticeSettings,
   type PracticeSettings,
 } from "@/lib/settings";
-import { TENSE_GROUPS, TENSE_LABELS, type TenseKey } from "@/lib/types";
+import type { Category } from "@/lib/types";
 
-/** Toggle switch bật/tắt một thì — pattern checkbox + peer chuẩn Tailwind. */
+/** Toggle switch bật/tắt một category — pattern checkbox + peer chuẩn Tailwind. */
 function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
   return (
     <label className="relative inline-flex shrink-0 cursor-pointer items-center">
@@ -31,14 +31,24 @@ export default function SettingsPage() {
   const router = useRouter();
   const { session } = useSession();
   const supabase = getSupabase();
-  const [enabled, setEnabled] = useState<TenseKey[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [enabled, setEnabled] = useState<string[]>([]);
   const [practice, setPractice] = useState<PracticeSettings | null>(null);
   const [admin, setAdmin] = useState(false);
 
   useEffect(() => {
-    setEnabled(getEnabledTenses());
+    if (!supabase) return;
+    supabase
+      .from("categories")
+      .select("*")
+      .order("sort_order")
+      .then(({ data }) => {
+        const cats = (data as Category[]) ?? [];
+        setCategories(cats);
+        setEnabled(getEnabledCategories(cats.map((c) => c.slug)));
+      });
     setPractice(getPracticeSettings());
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
     if (!supabase || !session) {
@@ -55,11 +65,11 @@ export default function SettingsPage() {
     setPracticeSettings(next);
   };
 
-  const toggleTense = (t: TenseKey) => {
-    const next = enabled.includes(t) ? enabled.filter((x) => x !== t) : [...enabled, t];
-    if (next.length === 0) return; // luôn giữ ít nhất 1 thì bật
+  const toggleCategory = (slug: string) => {
+    const next = enabled.includes(slug) ? enabled.filter((x) => x !== slug) : [...enabled, slug];
+    if (next.length === 0) return; // luôn giữ ít nhất 1 category bật
     setEnabled(next);
-    setEnabledTenses(next);
+    setEnabledCategories(next);
   };
 
   const signOut = async () => {
@@ -89,10 +99,10 @@ export default function SettingsPage() {
           </label>
           <select
             className="w-full rounded-xl border border-gray-300 px-4 py-3 bg-white"
-            defaultValue="fr"
+            defaultValue="en"
             disabled
           >
-            <option value="fr">Tiếng Pháp</option>
+            <option value="en">Tiếng Anh</option>
           </select>
           <p className="mt-1 text-xs text-gray-400">
             Các ngôn ngữ khác sẽ được bổ sung ở phiên bản sau.
@@ -157,26 +167,20 @@ export default function SettingsPage() {
         </div>
 
         <div className="border-t border-gray-100 pt-4">
-          <h2 className="text-sm font-semibold text-gray-500 mb-1">Tense to Practice</h2>
+          <h2 className="text-sm font-semibold text-gray-500 mb-1">Category to Practice</h2>
           <p className="text-xs text-gray-400 mb-3">
-            Chọn các thì muốn rèn luyện — màn Practice chỉ load thì đang bật. Lưu theo thiết bị.
+            Chọn các loại collocation muốn rèn luyện — màn Practice chỉ load category đang bật. Lưu theo thiết bị.
           </p>
-          <div className="space-y-4">
-            {TENSE_GROUPS.map((g) => (
-              <div key={g.mood}>
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1.5">
-                  {g.mood}
-                </h3>
-                <div className="rounded-xl border border-gray-200 divide-y divide-gray-100">
-                  {g.tenses.map((t) => (
-                    <div key={t} className="flex items-center justify-between px-3 py-2.5">
-                      <span className="text-gray-800">{TENSE_LABELS[t]}</span>
-                      <Toggle on={enabled.includes(t)} onChange={() => toggleTense(t)} />
-                    </div>
-                  ))}
-                </div>
+          <div className="rounded-xl border border-gray-200 divide-y divide-gray-100">
+            {categories.map((c) => (
+              <div key={c.slug} className="flex items-center justify-between px-3 py-2.5">
+                <span className="text-gray-800">{c.name}</span>
+                <Toggle on={enabled.includes(c.slug)} onChange={() => toggleCategory(c.slug)} />
               </div>
             ))}
+            {categories.length === 0 && (
+              <p className="px-3 py-2.5 text-sm text-gray-400">Chưa có category nào.</p>
+            )}
           </div>
         </div>
 

@@ -8,13 +8,12 @@ export const runtime = "nodejs";
  * Header:  x-api-key: <IMPORT_API_KEY>
  * Body:    một word object hoặc mảng word objects:
  * {
- *   "word": "parler", "word_type": "v.",
- *   "category": "nhom-er",             // slug từ bảng categories — đúng 1 nhóm chia
- *   "meaning_vi": "nói chuyện", "meaning_en": "to speak", "basics_vi": "...",
- *   "conjugations": { "present": { "rule_vi": "...", "forms": {...}, "examples": [...], "cloze": [...] }, ... }
+ *   "word": "sync", "word_type": "v.",
+ *   "category": "word-partnership",    // slug từ bảng categories — đúng 1 loại collocation
+ *   "meaning_vi": "đồng bộ", "meaning_en": "to synchronize", "basics_vi": "...",
+ *   "partnerships": [ { "key": "in_sync_with", "phrase": "in sync (with)", "meaning_vi": "...", "rule_vi": "...", "examples": [...], "cloze": [...] }, ... ]
  * }
- * Upsert theo cột `word`. Slug category phải tồn tại sẵn trong bảng `categories`
- * (quản lý qua seed/categories.mjs).
+ * Upsert theo cột `word`. Slug category phải tồn tại sẵn trong bảng `categories`.
  */
 export async function POST(req: NextRequest) {
   const apiKey = process.env.IMPORT_API_KEY;
@@ -43,7 +42,7 @@ export async function POST(req: NextRequest) {
     if (typeof w?.meaning_vi !== "string") errors.push(`items[${i}]: thiếu "meaning_vi"`);
     if (typeof w?.meaning_en !== "string") errors.push(`items[${i}]: thiếu "meaning_en"`);
     if (typeof w?.category !== "string" || !w.category.trim())
-      errors.push(`items[${i}]: thiếu "category" (slug nhóm chia, vd "nhom-er")`);
+      errors.push(`items[${i}]: thiếu "category" (slug loại collocation, vd "word-partnership")`);
     const status = typeof w?.status === "string" ? w.status : "published";
     if (!["draft", "processing", "published", "archived"].includes(status))
       errors.push(`items[${i}]: "status" phải là draft | processing | published | archived`);
@@ -55,7 +54,7 @@ export async function POST(req: NextRequest) {
       meaning_vi: String(w?.meaning_vi ?? ""),
       meaning_en: String(w?.meaning_en ?? ""),
       basics_vi: typeof w?.basics_vi === "string" ? w.basics_vi : "",
-      conjugations: typeof w?.conjugations === "object" && w.conjugations !== null ? w.conjugations : {},
+      partnerships: Array.isArray(w?.partnerships) ? w.partnerships : [],
     };
   });
 
@@ -76,7 +75,7 @@ export async function POST(req: NextRequest) {
   const unknown = usedSlugs.filter((s) => !knownSet.has(s));
   if (unknown.length > 0) {
     return NextResponse.json(
-      { error: `Category slug không tồn tại: ${unknown.join(", ")}. Thêm vào bảng categories trước (seed/categories.mjs).` },
+      { error: `Category slug không tồn tại: ${unknown.join(", ")}. Thêm vào bảng categories trước.` },
       { status: 400 }
     );
   }

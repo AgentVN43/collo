@@ -5,15 +5,7 @@ import Link from "next/link";
 import TopBar from "@/components/TopBar";
 import { getSupabase } from "@/lib/supabase";
 import { useSession } from "@/lib/useSession";
-import type { ProgressRow, TenseKey, Word } from "@/lib/types";
-import { TENSE_KEYS, TENSE_LABELS } from "@/lib/types";
-
-const TENSE_SHORT: Partial<Record<TenseKey, string>> = {
-  passe_compose: "P. composé",
-  futur_proche: "F. proche",
-  plus_que_parfait: "P-q-parfait",
-};
-const shortLabel = (t: TenseKey) => TENSE_SHORT[t] ?? TENSE_LABELS[t];
+import type { ProgressRow, Word } from "@/lib/types";
 
 function MasteryBar({ mastery }: { mastery: number }) {
   return (
@@ -95,13 +87,13 @@ function WordCard({
               Luyện
             </Link>
           </div>
-          {TENSE_KEYS.filter((t) => wp.word.conjugations[t]).map((t) => {
-            const row = wp.rows.find((r) => r.tense === t);
+          {wp.word.partnerships.map((p) => {
+            const row = wp.rows.find((r) => r.partnership_key === p.key);
             const mastery = row?.mastery ?? 0;
             return (
-              <div key={t} className="flex items-center gap-2 text-sm">
+              <div key={p.key} className="flex items-center gap-2 text-sm">
                 <span className="w-24 shrink-0 truncate text-gray-600">
-                  {shortLabel(t)}
+                  {p.phrase}
                 </span>
                 <MasteryBar mastery={mastery} />
                 <span className="ml-auto text-xs font-medium text-gray-500">
@@ -151,9 +143,9 @@ export default function ProgressPage() {
   };
 
   const { practicedCount, solidCount, notSolid, solid } = useMemo(() => {
-    const l1 = rows.filter((r) => r.level === 1);
+    const l2 = rows.filter((r) => r.level === 2);
     const byWord = new Map<string, ProgressRow[]>();
-    for (const r of l1) {
+    for (const r of l2) {
       if (r.attempts === 0) continue;
       const list = byWord.get(r.word_id) ?? [];
       list.push(r);
@@ -164,11 +156,11 @@ export default function ProgressPage() {
     for (const w of words) {
       const mine = byWord.get(w.id);
       if (!mine) continue;
-      const tenses = TENSE_KEYS.filter((t) => w.conjugations[t]);
+      const keys = w.partnerships.map((p) => p.key);
       const avgMastery =
         mine.reduce((s, r) => s + r.mastery, 0) / mine.length;
-      const isSolid = tenses.every(
-        (t) => (mine.find((r) => r.tense === t)?.mastery ?? 0) >= 4
+      const isSolid = keys.every(
+        (k) => (mine.find((r) => r.partnership_key === k)?.mastery ?? 0) >= 4
       );
       const attempts = mine.reduce((s, r) => s + r.attempts, 0);
       const fails = mine.reduce((s, r) => s + r.fails, 0);
