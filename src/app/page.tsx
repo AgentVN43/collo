@@ -6,11 +6,12 @@ import { useRouter } from "next/navigation";
 import TopBar from "@/components/TopBar";
 import { getSupabase } from "@/lib/supabase";
 import { useSession } from "@/lib/useSession";
-import { wordDot } from "@/lib/progress";
+import { isUnlocked, masteryDot } from "@/lib/progress";
 import { fetchWords } from "@/lib/words";
+import { fetchCollocations } from "@/lib/collocations";
 import { savedWordIds } from "@/lib/collections";
 import CollectionSheet from "@/components/CollectionSheet";
-import type { ProgressRow, Word } from "@/lib/types";
+import type { Collocation, ProgressRow, Word } from "@/lib/types";
 
 const DOT_CLASS = {
   gray: "bg-gray-300",
@@ -18,10 +19,14 @@ const DOT_CLASS = {
   green: "bg-green-500",
 } as const;
 
+type Tab = "words" | "collocations";
+
 export default function HomePage() {
   const router = useRouter();
   const { userId, loading: authLoading } = useSession();
+  const [tab, setTab] = useState<Tab>("words");
   const [words, setWords] = useState<Word[]>([]);
+  const [collocations, setCollocations] = useState<Collocation[]>([]);
   const [progress, setProgress] = useState<ProgressRow[]>([]);
   const [saved, setSaved] = useState<Set<string>>(new Set());
   const [sheetWordId, setSheetWordId] = useState<string | null>(null);
@@ -34,8 +39,9 @@ export default function HomePage() {
       setLoading(false);
       return;
     }
-    fetchWords(supabase).then((list) => {
-      setWords(list);
+    Promise.all([fetchWords(supabase), fetchCollocations(supabase)]).then(([w, c]) => {
+      setWords(w);
+      setCollocations(c);
       setLoading(false);
     });
   }, [supabase]);
@@ -49,7 +55,7 @@ export default function HomePage() {
       .then(({ data }) => setProgress((data as ProgressRow[]) ?? []));
   }, [supabase, userId]);
 
-  // Tap 🔖 → mở bottom sheet chọn bộ sưu tập (không toggle trực tiếp nữa)
+  // Tap 🔖 → mở bottom sheet chọn bộ sưu tập
   const openCollectionSheet = (wordId: string) => {
     if (!userId) {
       router.push("/login?next=/");
@@ -58,9 +64,10 @@ export default function HomePage() {
     setSheetWordId(wordId);
   };
 
-  // Section theo chủ đề, A→Z bên trong mỗi section
-  const sections = useMemo(() => {
-    const q = search.trim().toLowerCase();
+  const q = search.trim().toLowerCase();
+
+  // Tab từ đơn: danh sách phẳng A→Z (từ đơn không còn category)
+  const wordList = useMemo(() => {
     const filtered = q
       ? words.filter(
           (w) =>
@@ -69,32 +76,65 @@ export default function HomePage() {
             w.meaning_en.toLowerCase().includes(q)
         )
       : words;
-    const byTopic = new Map<string, { order: number; list: Word[] }>();
-    for (const w of filtered) {
-      const entry = byTopic.get(w.topic) ?? { order: w.topicOrder, list: [] };
-      entry.list.push(w);
-      byTopic.set(w.topic, entry);
+    return [...filtered].sort((a, b) => a.word.localeCompare(b.word, "en"));
+  }, [words, q]);
+
+  // Tab collocation: nhóm section theo 7 loại, A→Z bên trong
+  const sections = useMemo(() => {
+    const filtered = q
+      ? collocations.filter(
+          (c) => c.chunk.toLowerCase().includes(q) || c.literal_meaning.toLowerCase().includes(q)
+        )
+      : collocations;
+    const byTopic = new Map<string, { order: number; list: Collocation[] }>();
+    for (const c of filtered) {
+      const entry = byTopic.get(c.topic) ?? { order: c.topicOrder, list: [] };
+      entry.list.push(c);
+      byTopic.set(c.topic, entry);
     }
-    // section theo sort_order của topic content, A→Z bên trong
     return [...byTopic.entries()]
       .sort(([, a], [, b]) => a.order - b.order)
       .map(([topic, { list }]) => ({
         topic,
-        list: list.sort((a, b) => a.word.localeCompare(b.word, "fr")),
+        list: list.sort((a, b) => a.chunk.localeCompare(b.chunk, "en")),
       }));
-  }, [words, search]);
+  }, [collocations, q]);
+
+  const signedIn = !authLoading && !!userId;
 
   return (
     <div>
       <TopBar title="Folask" settings />
-      <div className="px-4 py-3 sticky top-12 z-30 bg-white border-b border-gray-100">
-        <input
-          type="search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Tìm từ hoặc nghĩa…"
-          className="w-full rounded-xl border border-gray-300 px-4 py-2 text-base outline-none focus:border-blue-500"
-        />
+
+      {/* Tab 2 tầng học */}
+      <div className="sticky top-12 z-30 bg-white border-b border-gray-100">
+        <div className="flex">
+          {(
+            [
+              ["words", `Từ đơn (${words.length})`],
+              ["collocations", `Collocation (${collocations.length})`],
+            ] as const
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${
+                tab === key ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-400"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="px-4 py-2.5">
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={tab === "words" ? "Tìm từ hoặc nghĩa…" : "Tìm cụm từ…"}
+            className="w-full rounded-xl border border-gray-300 px-4 py-2 text-base outline-none focus:border-blue-500"
+          />
+        </div>
       </div>
 
       {!supabase && (
@@ -104,20 +144,19 @@ export default function HomePage() {
         </p>
       )}
       {loading && <p className="p-6 text-center text-gray-400">Đang tải…</p>}
-      {!loading && supabase && words.length === 0 && (
-        <p className="m-4 rounded-xl bg-blue-50 p-4 text-sm text-blue-800">
-          Chưa có từ vựng. Chạy <code>npm run seed</code> để nạp 13 động từ mẫu.
-        </p>
-      )}
 
-      {sections.map(({ topic, list }) => (
-        <section key={topic}>
-          <h2 className="sticky top-[6.5rem] z-20 bg-gray-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 border-y border-gray-100">
-            {topic}
-          </h2>
+      {/* ===== TAB TỪ ĐƠN ===== */}
+      {!loading &&
+        supabase &&
+        tab === "words" &&
+        (wordList.length === 0 ? (
+          <p className="m-4 rounded-xl bg-blue-50 p-4 text-sm text-blue-800">
+            {q ? "Không tìm thấy từ nào." : "Chưa có từ vựng — import nội dung qua /api/words/import."}
+          </p>
+        ) : (
           <ul>
-            {list.map((w) => {
-              const dot = authLoading || !userId ? "gray" : wordDot(w, progress);
+            {wordList.map((w) => {
+              const dot = signedIn ? masteryDot(progress, "word", w.id) : "gray";
               return (
                 <li key={w.id} className="border-b border-gray-100">
                   <div className="flex items-center px-4 py-3">
@@ -142,8 +181,59 @@ export default function HomePage() {
               );
             })}
           </ul>
-        </section>
-      ))}
+        ))}
+
+      {/* ===== TAB COLLOCATION ===== */}
+      {!loading &&
+        supabase &&
+        tab === "collocations" &&
+        (sections.length === 0 ? (
+          <p className="m-4 rounded-xl bg-blue-50 p-4 text-sm text-blue-800">
+            {q
+              ? "Không tìm thấy cụm nào."
+              : "Chưa có collocation — import nội dung qua /api/words/import."}
+          </p>
+        ) : (
+          sections.map(({ topic, list }) => (
+            <section key={topic}>
+              <h2 className="sticky top-[9.5rem] z-20 border-y border-gray-100 bg-gray-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                {topic}
+              </h2>
+              <ul>
+                {list.map((c) => {
+                  const dot = signedIn ? masteryDot(progress, "collocation", c.id) : "gray";
+                  const locked = signedIn && !isUnlocked(c, progress);
+                  return (
+                    <li key={c.id} className="border-b border-gray-100">
+                      <Link
+                        href={`/collocation/${c.id}`}
+                        className="flex items-center gap-2 px-4 py-3"
+                      >
+                        <span className="flex-1 min-w-0">
+                          <span className="flex items-center gap-2">
+                            <span className={`w-2 h-2 rounded-full shrink-0 ${DOT_CLASS[dot]}`} />
+                            <span className="text-base font-bold text-gray-900">{c.chunk}</span>
+                            {locked && (
+                              <span
+                                className="text-sm"
+                                aria-label="Chưa mở khoá"
+                                title="Học thuộc các từ đơn cấu thành để mở khoá"
+                              >
+                                🔒
+                              </span>
+                            )}
+                          </span>
+                          <p className="truncate text-sm text-gray-700">{c.literal_meaning}</p>
+                        </span>
+                        <span className="text-gray-300">›</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))
+        ))}
 
       {userId && (
         <CollectionSheet

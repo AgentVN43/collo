@@ -114,7 +114,7 @@ export default function SettingsPage() {
           {practice && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-700 mb-1">Số từ mỗi phiên luyện</label>
+                <label className="block text-sm text-gray-700 mb-1">Số mục mỗi phiên luyện</label>
                 <input
                   type="number"
                   min={1}
@@ -169,7 +169,8 @@ export default function SettingsPage() {
         <div className="border-t border-gray-100 pt-4">
           <h2 className="text-sm font-semibold text-gray-500 mb-1">Category to Practice</h2>
           <p className="text-xs text-gray-400 mb-3">
-            Chọn các loại collocation muốn rèn luyện — màn Practice chỉ load category đang bật. Lưu theo thiết bị.
+            Chọn các loại collocation muốn rèn luyện — áp dụng cho Level 2 (luyện collocation). Level 1
+            (từ đơn) không lọc theo category. Lưu theo thiết bị.
           </p>
           <div className="rounded-xl border border-gray-200 divide-y divide-gray-100">
             {categories.map((c) => (

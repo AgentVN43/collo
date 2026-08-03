@@ -6,10 +6,11 @@ export const runtime = "nodejs";
 /**
  * POST /api/words/import-draft
  * Header:  x-api-key: <IMPORT_API_KEY>
- * Body:    { "word": "sync" } hoặc [{ "word": "sync" }, { "word": "resolve" }]
+ * Body:    { "word": "pain" } hoặc [{ "word": "pain" }, { "word": "school" }]
  *
- * Import nháp: chỉ cần `word`, status mặc định 'draft'.
+ * Import nháp TỪ ĐƠN: chỉ cần `word`, status mặc định 'draft'.
  * Dùng để tạo bản ghi chưa hoàn thiện, sau đó update dần rồi publish.
+ * Collocation không tạo ở đây — dùng /api/words/import với JSON lồng nhau.
  */
 export async function POST(req: NextRequest) {
   const apiKey = process.env.IMPORT_API_KEY;
@@ -39,12 +40,10 @@ export async function POST(req: NextRequest) {
     }
     return {
       word: String(w?.word ?? "").trim().toLowerCase(),
-      word_type: typeof w?.word_type === "string" ? w.word_type : "v.",
-      category_slug: typeof w?.category === "string" && w.category.trim() ? w.category.trim() : null,
+      word_type: typeof w?.word_type === "string" ? w.word_type : "n.",
       meaning_vi: typeof w?.meaning_vi === "string" ? w.meaning_vi : "",
       meaning_en: typeof w?.meaning_en === "string" ? w.meaning_en : "",
       basics_vi: typeof w?.basics_vi === "string" ? w.basics_vi : "",
-      partnerships: Array.isArray(w?.partnerships) ? w.partnerships : [],
       status: "draft", // endpoint này chỉ tạo/cập nhật nháp; publish qua /api/words/import
     };
   });

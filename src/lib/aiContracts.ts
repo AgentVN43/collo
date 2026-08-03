@@ -18,7 +18,7 @@ export const TASK_CONTRACTS: Record<AiTaskType, TaskContract> = {
       "AI điền meaning, basics_vi, rule_vi, examples, cloze cho mọi partnership có sẵn của từ. Phrase/alt do hệ thống bảo toàn — AI trả gì cũng bị ghi đè lại bằng cụm gốc.",
     vars: {
       word: "headword (vd: sync)",
-      category: "slug loại collocation (word-partnership / verb-noun / adjective-noun)",
+      category: "slug loại collocation (adverb-adjective / adjective-noun / noun-noun / noun-verb / verb-noun / verb-preposition / verb-adverb)",
       meaning_vi: "nghĩa tiếng Việt hiện có (có thể rỗng)",
       meaning_en: "định nghĩa tiếng Anh hiện có (có thể rỗng)",
       partnerships_list: "danh sách key + phrase hiện có, phân cách bằng dấu phẩy",

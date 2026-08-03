@@ -8,6 +8,7 @@ export const STATUS_LABELS: Record<WordStatus, string> = {
   archived: "Lưu trữ",
 };
 
+/** 7 loại collocation chuẩn — thuộc về COLLOCATION, không phải từ đơn. */
 export interface Category {
   slug: string;
   name: string;
@@ -21,44 +22,94 @@ export interface Example {
   pattern?: string; // công thức ngữ pháp, vd "S+V+O" — chỉ để hiển thị
 }
 
-export interface ClozeItem {
-  before: string;
-  after: string;
-  answer: string;
-  alt?: string[];
-  hint: string; // headword hiển thị trong ngoặc
-  explain_vi: string;
-  pattern?: string; // công thức ngữ pháp, vd "S+V+O" — chỉ để hiển thị
-}
-
-/**
- * Một "cụm cố định" (word partnership) của 1 headword — tương đương "thì" trong bản Pháp
- * cũ, nhưng KHÔNG phải enum toàn cục: mỗi từ có danh sách partnership riêng, số lượng khác nhau.
- */
-export interface PartnershipItem {
-  key: string; // slug ổn định trong phạm vi 1 từ, vd "in_sync_with" — dùng làm progress key
-  phrase: string; // cụm đầy đủ = đáp án Level 1, vd "in sync (with)"
-  meaning_vi: string; // nghĩa tiếng Việt riêng của cụm này
-  rule_vi: string; // ghi chú cách dùng
-  alt?: string[]; // biến thể được chấp nhận khi chấm
-  examples: Example[];
-  cloze: ClozeItem[];
-}
+// ---- Từ đơn: đơn vị học Level 1 ----
 
 export interface Word {
   id: string;
   word: string;
   word_type: string;
-  category_slug: string | null;
   status: WordStatus;
   meaning_vi: string;
   meaning_en: string;
   basics_vi: string;
-  partnerships: PartnershipItem[];
-  // Tính phía client từ bảng categories (xem lib/words.ts):
-  topic: string; // tên category — dùng cho section ở Home, hàng đợi Practice và badge
+  created_at?: string;
+}
+
+// ---- Collocation: đơn vị học Level 2 ----
+
+export const VARIANT_CONTEXTS = ["casual", "formal", "alternative"] as const;
+export type VariantContext = (typeof VARIANT_CONTEXTS)[number];
+
+export const VARIANT_LABELS: Record<VariantContext, string> = {
+  casual: "Thân mật",
+  formal: "Trang trọng",
+  alternative: "Cách nói khác",
+};
+
+/** Một lượt thoại trong hội thoại mẫu. */
+export interface ConversationTurn {
+  speaker: string;
+  text: string;
+}
+
+export interface CollocationVariant {
+  id: string;
+  collocation_id: string;
+  context: VariantContext;
+  text_variant: string;
+  conversation: ConversationTurn[];
+  sort_order: number;
+}
+
+export interface Collocation {
+  id: string;
+  chunk: string;
+  literal_meaning: string;
+  category_slug: string | null;
+  note_vi: string;
+  examples: Example[];
+  status: WordStatus;
+  created_at?: string;
+  // Tính phía client từ các bảng liên quan (xem lib/collocations.ts):
+  variants: CollocationVariant[];
+  exercises: Exercise[];
+  word_ids: string[]; // từ đơn cấu thành — dùng cho cơ chế mở khoá
+  topic: string; // tên category — dùng cho section ở Home và badge
   topicOrder: number;
 }
+
+// ---- Bài tập: một bảng cho mọi dạng, phần riêng nằm trong payload ----
+
+export const EXERCISE_TYPES = ["fill_in", "multiple_choice", "conversation_gap"] as const;
+export type ExerciseType = (typeof EXERCISE_TYPES)[number];
+
+/** Các dạng đã có UI chấm điểm. Dạng ngoài danh sách này bị bỏ qua khi dựng phiên luyện. */
+export const SUPPORTED_EXERCISE_TYPES: ExerciseType[] = ["fill_in", "multiple_choice"];
+
+export interface FillInPayload {
+  before?: string;
+  after?: string;
+}
+
+export interface MultipleChoicePayload {
+  options?: string[];
+}
+
+export interface Exercise {
+  id: string;
+  word_id: string | null;
+  collocation_id: string | null;
+  type: ExerciseType;
+  prompt: string;
+  answer: string;
+  alt: string[];
+  explain_vi: string;
+  pattern: string;
+  payload: FillInPayload & MultipleChoicePayload & Record<string, unknown>;
+  sort_order: number;
+}
+
+// ---- Bộ sưu tập (gom từ đơn) ----
 
 export interface Collection {
   id: string;
@@ -69,6 +120,8 @@ export interface Collection {
   created_at: string;
   updated_at: string;
 }
+
+// ---- Feedback (vẫn gắn theo từ đơn) ----
 
 export const FEEDBACK_STATUSES = ["new", "wip", "done"] as const;
 export type FeedbackStatus = (typeof FEEDBACK_STATUSES)[number];
@@ -90,11 +143,14 @@ export interface Feedback {
   created_at: string;
 }
 
+// ---- Tiến độ: một bảng, hai tầng phân biệt bằng item_type ----
+
+export type ProgressItemType = "word" | "collocation";
+
 export interface ProgressRow {
   user_id: string;
-  word_id: string;
-  partnership_key: string;
-  level: number;
+  item_type: ProgressItemType;
+  item_id: string;
   attempts: number;
   fails: number;
   near_misses: number;

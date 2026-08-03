@@ -1,7 +1,13 @@
-import type { ProgressRow, Word } from "./types";
+import type { Collocation, ProgressItemType, ProgressRow } from "./types";
 
 /** Spacing ladder (days) indexed by mastery after the session. */
 const DUE_DAYS = [1, 1, 3, 7, 14, 14];
+
+/** Mastery tối thiểu của một TỪ ĐƠN để coi là "đã thuộc" → mở khoá collocation chứa nó. */
+export const LEARNED_THRESHOLD = 3;
+
+/** Mastery coi như thành thạo (chấm xanh ở Home, tab "Thành thạo" ở Progress). */
+export const SOLID_THRESHOLD = 4;
 
 export interface SessionResult {
   correct: number;
@@ -37,15 +43,13 @@ export function applySession(row: ProgressRow, r: SessionResult): ProgressRow {
 
 export function emptyRow(
   userId: string,
-  wordId: string,
-  partnershipKey: string,
-  level: number
+  itemType: ProgressItemType,
+  itemId: string
 ): ProgressRow {
   return {
     user_id: userId,
-    word_id: wordId,
-    partnership_key: partnershipKey,
-    level,
+    item_type: itemType,
+    item_id: itemId,
     attempts: 0,
     fails: 0,
     near_misses: 0,
@@ -55,68 +59,71 @@ export function emptyRow(
   };
 }
 
-/**
- * Chọn partnership để luyện Level 2 (cloze): mastery thấp nhất trước, trong số các
- * partnership có sẵn cloze. `allowed` = category đang bật trong Settings; null nếu
- * category của từ không nằm trong danh sách bật.
- */
-export function pickPartnership(word: Word, rows: ProgressRow[]): string | null {
-  const available = word.partnerships.filter((p) => (p.cloze?.length ?? 0) > 0);
-  if (available.length === 0) return null;
-  let best = available[0].key;
-  let bestMastery = Infinity;
-  for (const p of available) {
-    const row = rows.find((r) => r.word_id === word.id && r.partnership_key === p.key && r.level === 2);
-    const m = row?.mastery ?? -1; // never practiced sorts first
-    if (m < bestMastery) {
-      bestMastery = m;
-      best = p.key;
-    }
-  }
-  return best;
+export function findRow(
+  rows: ProgressRow[],
+  itemType: ProgressItemType,
+  itemId: string
+): ProgressRow | undefined {
+  return rows.find((r) => r.item_type === itemType && r.item_id === itemId);
 }
 
-/** Word-level mastery for the Home dot: gray = never practiced, yellow = in progress, green = solid. */
-export function wordDot(word: Word, rows: ProgressRow[]): "gray" | "yellow" | "green" {
-  const mine = rows.filter((r) => r.word_id === word.id);
-  if (mine.length === 0) return "gray";
-  const l2 = mine.filter((r) => r.level === 2);
-  const keys = word.partnerships.map((p) => p.key);
-  if (keys.length === 0) return "gray";
-  const solid = keys.every((k) => (l2.find((r) => r.partnership_key === k)?.mastery ?? 0) >= 4);
-  return solid ? "green" : "yellow";
+export function masteryOf(
+  rows: ProgressRow[],
+  itemType: ProgressItemType,
+  itemId: string
+): number {
+  return findRow(rows, itemType, itemId)?.mastery ?? 0;
+}
+
+/** Chấm tiến độ ở Home: xám = chưa luyện, vàng = đang học, xanh = thành thạo. */
+export function masteryDot(
+  rows: ProgressRow[],
+  itemType: ProgressItemType,
+  itemId: string
+): "gray" | "yellow" | "green" {
+  const row = findRow(rows, itemType, itemId);
+  if (!row || row.attempts === 0) return "gray";
+  return row.mastery >= SOLID_THRESHOLD ? "green" : "yellow";
 }
 
 /**
- * Priority queue for practice-session word picking:
- * 1) overdue reviews, 2) highest fail-rate, 3) new words, 4) lowest mastery.
+ * Collocation được mở khoá khi MỌI từ đơn cấu thành đã thuộc (mastery >= 3).
+ * Collocation chưa liên kết từ đơn nào coi như mở sẵn (không có điều kiện để chặn).
  */
-export function buildQueue(words: Word[], rows: ProgressRow[]): Word[] {
+export function isUnlocked(collocation: Collocation, rows: ProgressRow[]): boolean {
+  if (collocation.word_ids.length === 0) return true;
+  return collocation.word_ids.every((id) => masteryOf(rows, "word", id) >= LEARNED_THRESHOLD);
+}
+
+/**
+ * Hàng đợi ưu tiên cho phiên luyện, dùng chung cho cả từ đơn lẫn collocation:
+ * 1) quá hạn ôn, 2) fail-rate cao, 3) mục mới, 4) mastery thấp.
+ * `boost` cộng thêm điểm ưu tiên cho từng mục (dùng để đẩy collocation đã mở khoá lên trước).
+ */
+export function buildQueue<T extends { id: string }>(
+  items: T[],
+  rows: ProgressRow[],
+  itemType: ProgressItemType,
+  boost?: (item: T) => number
+): T[] {
   const today = new Date().toISOString().slice(0, 10);
-  const byWord = new Map<string, ProgressRow[]>();
+  const byItem = new Map<string, ProgressRow>();
   for (const r of rows) {
-    if (r.level !== 1) continue;
-    const list = byWord.get(r.word_id) ?? [];
-    list.push(r);
-    byWord.set(r.word_id, list);
+    if (r.item_type === itemType) byItem.set(r.item_id, r);
   }
 
-  const scored = words.map((w) => {
-    const mine = byWord.get(w.id) ?? [];
-    const overdue = mine.some((r) => r.next_due !== null && r.next_due <= today);
-    const attempts = mine.reduce((s, r) => s + r.attempts, 0);
-    const fails = mine.reduce((s, r) => s + r.fails, 0);
-    const failRate = attempts > 0 ? fails / attempts : 0;
-    const avgMastery = mine.length ? mine.reduce((s, r) => s + r.mastery, 0) / mine.length : 0;
-    const isNew = mine.length === 0;
+  const scored = items.map((item) => {
+    const row = byItem.get(item.id);
+    const overdue = row?.next_due != null && row.next_due <= today;
+    const failRate = row && row.attempts > 0 ? row.fails / row.attempts : 0;
 
-    let priority = 0;
+    let priority: number;
     if (overdue) priority = 4000;
     else if (failRate > 0.3) priority = 3000 + failRate * 100;
-    else if (isNew) priority = 1000;
-    else priority = 500 - avgMastery;
-    return { w, priority };
+    else if (!row) priority = 1000;
+    else priority = 500 - row.mastery;
+    return { item, priority: priority + (boost?.(item) ?? 0) };
   });
 
-  return scored.sort((a, b) => b.priority - a.priority).map((s) => s.w);
+  return scored.sort((a, b) => b.priority - a.priority).map((s) => s.item);
 }

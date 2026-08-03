@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const TABS = [
-  { href: "/admin", label: "Từ vựng", icon: "📝" },
+  { href: "/admin", label: "Nội dung", icon: "📝" },
   { href: "/admin/ai", label: "AI Center", icon: "🤖" },
   { href: "/admin/feedbacks", label: "Feedbacks", icon: "💬" },
 ];
@@ -14,7 +14,9 @@ export default function AdminBottomNav() {
 
   const isActive = (href: string) =>
     href === "/admin"
-      ? pathname === "/admin" || pathname.startsWith("/admin/word")
+      ? pathname === "/admin" ||
+        pathname.startsWith("/admin/word") ||
+        pathname.startsWith("/admin/collocation")
       : pathname.startsWith(href);
 
   return (
