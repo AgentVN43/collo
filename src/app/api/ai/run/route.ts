@@ -8,7 +8,7 @@ export const runtime = "nodejs";
  *
  * Logic cũ đọc/ghi trực tiếp cột `words.partnerships` (jsonb) và merge kết quả AI vào đó.
  * Cột đó đã bị bỏ khi chuyển sang mô hình quan hệ (collocations / word_collocations /
- * collocation_variants / exercises), nên endpoint này không còn chạy được như trước.
+ * intents / exercises), nên endpoint này không còn chạy được như trước.
  *
  * Các bảng ai_* và trang /admin/ai được giữ nguyên để dùng lại sau. Trong lúc chờ,
  * soạn nội dung bằng AI ngoài (ChatGPT/Claude…) rồi POST JSON vào /api/words/import —

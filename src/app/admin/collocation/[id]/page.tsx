@@ -300,7 +300,8 @@ export default function AdminCollocationPage() {
           />
         </div>
         <p className="text-xs text-gray-400">
-          Ví dụ, ngữ cảnh (casual/formal/alternative) và bài tập cập nhật qua POST /api/words/import.
+          Ví dụ, hội thoại mẫu và bài tập cập nhật qua POST /api/words/import. Ý định giao tiếp gán
+          lúc import — muốn đổi thì import lại với ý định khác.
         </p>
       </div>
     </div>

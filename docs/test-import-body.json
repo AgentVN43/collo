@@ -1,162 +1,141 @@
 [
   {
-    "word": "pain",
-    "word_type": "n.",
-    "meaning_vi": "cơn đau",
-    "meaning_en": "physical suffering caused by illness or injury",
-    "basics_vi": "Danh từ chỉ cảm giác đau. Đi với các tính từ chỉ mức độ mạnh như excruciating, severe, sharp.",
+    "intent": "báo dự án đang chậm tiến độ",
+    "description_vi": "Khi tiến độ thực tế chậm hơn kế hoạch và cần thông báo cho người liên quan.",
+    "situation": "quản lý dự án",
     "status": "published",
-    "exercises": [
-      {
-        "type": "multiple_choice",
-        "prompt": "Từ nào có nghĩa là \"cơn đau\"?",
-        "answer": "pain",
-        "explain_vi": "Pain = cơn đau (danh từ không đếm được khi nói chung).",
-        "payload": { "options": ["pain", "paint", "pane", "plain"] }
-      }
-    ],
     "collocations": [
       {
-        "chunk": "excruciating pain",
-        "literal_meaning": "cơn đau dữ dội, đau đớn tột cùng",
-        "category": "adjective-noun",
-        "note_vi": "\"Excruciating\" chỉ đi với pain/agony/headache — KHÔNG dùng với joy hay happiness.",
-        "status": "published",
-        "also_words": ["excruciating"],
+        "chunk": "fall behind schedule",
+        "register": "formal",
+        "category": "verb-preposition",
+        "literal_meaning": "rơi vào tình trạng chậm tiến độ",
+        "note_vi": "Dùng trong email, báo cáo, họp với khách. KHÔNG dùng 'go late schedule'.",
         "examples": [
           {
-            "en": "She was in excruciating pain after the surgery.",
-            "vi": "Cô ấy đau đớn dữ dội sau ca phẫu thuật.",
-            "pattern": "S+V+C"
+            "en": "The project fell behind schedule after the server outage.",
+            "vi": "Dự án bị chậm tiến độ sau sự cố server.",
+            "pattern": "S+V+O"
           }
         ],
-        "variants": [
+        "conversation": [
+          { "speaker": "Manager", "text": "How is the migration going?" },
+          { "speaker": "You", "text": "We have fallen behind schedule due to the outage." },
+          { "speaker": "Manager", "text": "Understood. Please send me a revised timeline." }
+        ],
+        "words": [
           {
-            "context": "casual",
-            "text_variant": "It hurts like crazy.",
-            "conversation": [
-              { "speaker": "A", "text": "How's your knee after the fall?" },
-              { "speaker": "B", "text": "Honestly? It hurts like crazy." }
-            ]
-          },
-          {
-            "context": "formal",
-            "text_variant": "The patient reported excruciating pain in the lower back.",
-            "conversation": [
-              { "speaker": "Doctor", "text": "Could you describe the discomfort?" },
+            "word": "schedule",
+            "word_type": "n.",
+            "meaning_vi": "tiến độ, lịch trình",
+            "meaning_en": "a plan of when things should happen",
+            "basics_vi": "Danh từ chỉ kế hoạch thời gian. Hay đi với behind / ahead of / on.",
+            "exercises": [
               {
-                "speaker": "Patient",
-                "text": "I am experiencing excruciating pain in my lower back."
+                "type": "multiple_choice",
+                "prompt": "Từ nào có nghĩa là \"tiến độ, lịch trình\"?",
+                "answer": "schedule",
+                "explain_vi": "Schedule = kế hoạch thời gian.",
+                "payload": { "options": ["schedule", "scholar", "scheduling", "schedule book"] }
               }
             ]
           },
           {
-            "context": "alternative",
-            "text_variant": "unbearable pain",
-            "conversation": [
-              { "speaker": "A", "text": "Was the recovery difficult?" },
-              { "speaker": "B", "text": "The first night was unbearable pain, then it eased." }
-            ]
+            "word": "fall",
+            "word_type": "v.",
+            "meaning_vi": "rơi, rơi vào (trạng thái)",
+            "meaning_en": "to move down, or to enter a state",
+            "basics_vi": "Ngoài nghĩa đen là rơi, fall còn dùng để chỉ rơi vào một trạng thái: fall behind, fall asleep, fall ill."
           }
         ],
         "exercises": [
           {
             "type": "fill_in",
             "prompt": "",
-            "answer": "excruciating pain",
-            "alt": [],
-            "explain_vi": "Mô tả mức độ đau dữ dội dùng \"excruciating pain\".",
-            "pattern": "S+V+C",
+            "answer": "fall behind schedule",
+            "alt": ["fallen behind schedule", "fell behind schedule"],
+            "explain_vi": "Diễn tả việc bị chậm so với kế hoạch ban đầu.",
+            "pattern": "S+V+O",
             "payload": {
-              "before": "He clutched his knee, screaming in ",
-              "after": "."
+              "before": "Because of the outage, we started to ",
+              "after": " by two weeks."
             }
           },
           {
             "type": "multiple_choice",
-            "prompt": "Tính từ nào đi tự nhiên với \"pain\"?",
-            "answer": "excruciating",
-            "explain_vi": "Excruciating chỉ dùng cho cảm giác tiêu cực như pain/agony, không dùng với joy.",
-            "payload": { "options": ["excruciating", "delicious", "scalable", "frantic"] }
+            "prompt": "Trong email báo cáo cho khách hàng, nên dùng cách nói nào?",
+            "answer": "fall behind schedule",
+            "explain_vi": "Đây là cách nói trang trọng, chuẩn mực; các phương án còn lại không tự nhiên.",
+            "payload": {
+              "options": [
+                "fall behind schedule",
+                "drop under schedule",
+                "go late schedule",
+                "miss the schedule time"
+              ]
+            }
           }
         ]
-      }
-    ]
-  },
-  {
-    "word": "school",
-    "word_type": "n.",
-    "meaning_vi": "trường học",
-    "meaning_en": "a place where children are educated",
-    "basics_vi": "Danh từ chỉ nơi học tập. Ghép với nhiều danh từ khác để tạo cụm: school project, school bus, school year.",
-    "status": "published",
-    "collocations": [
+      },
       {
-        "chunk": "school project",
-        "literal_meaning": "bài tập/dự án ở trường",
-        "category": "noun-noun",
-        "note_vi": "Noun + Noun: danh từ đầu (school) bổ nghĩa cho danh từ sau (project), chỉ loại dự án.",
-        "status": "published",
-        "also_words": ["project"],
+        "chunk": "running late on this",
+        "register": "casual",
+        "category": "other",
+        "literal_meaning": "đang bị trễ vụ này",
+        "note_vi": "Nói với đồng nghiệp qua Slack/Zalo. Đừng dùng trong email gửi khách hàng.",
         "examples": [
           {
-            "en": "We finished our school project the night before the deadline.",
-            "vi": "Chúng tôi hoàn thành bài tập ở trường vào đêm trước hạn nộp.",
-            "pattern": "S+V+O"
+            "en": "Heads up, we're running late on this one.",
+            "vi": "Báo trước là bọn mình đang trễ vụ này.",
+            "pattern": "S+V+C"
           }
         ],
-        "variants": [
+        "conversation": [
+          { "speaker": "A", "text": "Is the feature ready for demo tomorrow?" },
+          { "speaker": "B", "text": "Honestly, we're running late on this. Can we push to Friday?" }
+        ],
+        "words": [
           {
-            "context": "casual",
-            "text_variant": "I've got a school thing due tomorrow.",
-            "conversation": [
-              { "speaker": "A", "text": "Wanna hang out tonight?" },
-              { "speaker": "B", "text": "Can't — I've got a school thing due tomorrow." }
-            ]
+            "word": "late",
+            "word_type": "adj.",
+            "meaning_vi": "trễ, muộn",
+            "meaning_en": "after the expected time",
+            "basics_vi": "Tính từ chỉ sự chậm trễ. Đi với run late, be late for, stay up late."
           },
           {
-            "context": "formal",
-            "text_variant": "The students submitted their school project on time.",
-            "conversation": [
-              { "speaker": "Teacher", "text": "Has your group completed the assignment?" },
-              {
-                "speaker": "Student",
-                "text": "Yes, we submitted our school project this morning."
-              }
-            ]
+            "word": "run",
+            "word_type": "v.",
+            "meaning_vi": "chạy; diễn ra, vận hành",
+            "meaning_en": "to move fast, or to operate/proceed",
+            "basics_vi": "Ngoài nghĩa chạy, run còn chỉ trạng thái vận hành: run late, run smoothly, run out of."
           }
         ],
         "exercises": [
           {
             "type": "fill_in",
             "prompt": "",
-            "answer": "school project",
-            "alt": [],
-            "explain_vi": "Ghép school + project thành cụm danh từ chỉ dự án làm ở trường.",
-            "pattern": "S+V+O",
+            "answer": "running late on this",
+            "alt": ["running late"],
+            "explain_vi": "Cách nói thân mật khi báo với đồng nghiệp là đang bị trễ.",
+            "pattern": "S+V+C",
+            "payload": { "before": "Sorry, we're ", "after": " — need two more days." }
+          },
+          {
+            "type": "multiple_choice",
+            "prompt": "Nhắn Slack cho đồng nghiệp thì nói thế nào cho tự nhiên?",
+            "answer": "running late on this",
+            "explain_vi": "Cách nói đời thường; 'fall behind schedule' nghe quá trang trọng cho tin nhắn.",
             "payload": {
-              "before": "My group is working on a ",
-              "after": " about renewable energy."
+              "options": [
+                "running late on this",
+                "delaying this matter",
+                "being late of this",
+                "late running this"
+              ]
             }
           }
         ]
       }
     ]
-  },
-  {
-    "word": "project",
-    "word_type": "n.",
-    "meaning_vi": "dự án, bài tập lớn",
-    "meaning_en": "a planned piece of work with a specific goal",
-    "basics_vi": "Danh từ chỉ công việc có kế hoạch và mục tiêu rõ ràng. Đi với launch, complete, manage, hoặc ghép thành school project.",
-    "status": "published"
-  },
-  {
-    "word": "excruciating",
-    "word_type": "adj.",
-    "meaning_vi": "dữ dội, tột cùng (về mức độ đau)",
-    "meaning_en": "extremely painful",
-    "basics_vi": "Tính từ chỉ mức độ cực đại của cảm giác tiêu cực. Chỉ dùng với pain, agony, headache — không dùng với cảm xúc tích cực.",
-    "status": "published"
   }
 ]
