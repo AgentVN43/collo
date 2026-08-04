@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import type { Collocation, Register, Word } from "@/lib/types";
 import { REGISTER_HINTS, REGISTER_LABELS } from "@/lib/types";
 import SpeakButton from "./SpeakButton";
+import ConversationSheet from "./ConversationSheet";
 
 const REGISTER_STYLE: Record<Register, string> = {
   formal: "bg-indigo-50 border-indigo-200 text-indigo-800",
@@ -35,6 +37,8 @@ export default function CollocationDetail({
   siblings?: Collocation[];
   locked?: boolean;
 }) {
+  const [translationOpen, setTranslationOpen] = useState(false);
+
   return (
     <div className="px-4 pb-6">
       {/* Ý định giao tiếp: đặt lên đầu vì đó là cái người học muốn nói */}
@@ -145,10 +149,21 @@ export default function CollocationDetail({
         </div>
       )}
 
-      {/* Hội thoại mẫu — minh hoạ chính cách nói này trong hoàn cảnh của nó */}
+      {/* Hội thoại mẫu — chỉ tiếng Anh; bản dịch mở riêng qua nút ⓘ để không phá việc
+          luyện đọc hiểu (thấy tiếng Việt ngay là mắt sẽ đọc tiếng Việt trước). */}
       {collocation.conversation.length > 0 && (
         <div className="py-4">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase mb-2">Hội thoại mẫu</h2>
+          <div className="mb-2 flex items-center gap-2">
+            <h2 className="text-sm font-semibold uppercase text-gray-500">Hội thoại mẫu</h2>
+            <button
+              onClick={() => setTranslationOpen(true)}
+              aria-label="Xem bản dịch hội thoại"
+              title="Xem bản dịch"
+              className="flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-xs font-serif font-bold text-gray-500 active:bg-gray-100"
+            >
+              i
+            </button>
+          </div>
           <div className="space-y-2">
             {collocation.conversation.map((turn, i) => {
               // Lượt của người nói đầu tiên căn trái, người còn lại căn phải
@@ -174,6 +189,12 @@ export default function CollocationDetail({
           </div>
         </div>
       )}
+
+      <ConversationSheet
+        open={translationOpen}
+        conversation={collocation.conversation}
+        onClose={() => setTranslationOpen(false)}
+      />
     </div>
   );
 }

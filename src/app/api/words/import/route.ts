@@ -20,7 +20,7 @@ export const runtime = "nodejs";
  *     "literal_meaning": "rơi vào tình trạng chậm tiến độ",
  *     "note_vi": "…",
  *     "examples": [{ "en": "…", "vi": "…", "pattern": "S+V+O" }],
- *     "conversation": [{ "speaker": "A", "text": "…" }],
+ *     "conversation": [{ "speaker": "A", "text": "…(tiếng Anh)", "translate": "…(tiếng Việt)" }],
  *     "words": [{ "word": "schedule", "word_type": "n.", "meaning_vi": "…",
  *                 "meaning_en": "…", "basics_vi": "…" }],
  *     "exercises": [{ "type": "fill_in", "answer": "…", "explain_vi": "…",
@@ -77,7 +77,7 @@ interface ParsedCollocation {
   register: string;
   note_vi: string;
   examples: Raw[];
-  conversation: { speaker: string; text: string }[];
+  conversation: { speaker: string; text: string; translate: string }[];
   status: string;
   words: ParsedWord[];
   exercises: ParsedExercise[];
@@ -176,11 +176,12 @@ function parseItem(raw: Raw, index: number, errors: string[]): ParsedIntent {
       errors.push(`${cw}: "status" phải là ${STATUSES.join(" | ")}`);
     }
 
+    // text = lời thoại tiếng Anh; translate = bản dịch tiếng Việt (hiện khi người học mở)
     const conversation = arr(c.conversation).map((t, ti) => {
       if (!str(t.speaker).trim() || !str(t.text).trim()) {
         errors.push(`${cw}.conversation[${ti}]: cần cả "speaker" và "text"`);
       }
-      return { speaker: str(t.speaker), text: str(t.text) };
+      return { speaker: str(t.speaker), text: str(t.text), translate: str(t.translate) };
     });
 
     const words = parseWords(c.words, cw, cStatus, errors);

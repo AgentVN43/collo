@@ -51,10 +51,15 @@ export const REGISTER_HINTS: Record<Register, string> = {
   casual: "Trò chuyện, nhắn tin Slack / Zalo / Viber hằng ngày",
 };
 
-/** Một lượt thoại trong hội thoại mẫu. */
+/**
+ * Một lượt thoại trong hội thoại mẫu.
+ * `text` là tiếng Anh (thứ người học đọc/nghe), `translate` là bản dịch tiếng Việt —
+ * chỉ hiện khi người học chủ động mở, để không phá việc luyện đọc hiểu.
+ */
 export interface ConversationTurn {
   speaker: string;
   text: string;
+  translate?: string;
 }
 
 /**

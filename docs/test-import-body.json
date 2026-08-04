@@ -19,9 +19,21 @@
           }
         ],
         "conversation": [
-          { "speaker": "Manager", "text": "How is the migration going?" },
-          { "speaker": "You", "text": "We have fallen behind schedule due to the outage." },
-          { "speaker": "Manager", "text": "Understood. Please send me a revised timeline." }
+          {
+            "speaker": "Manager",
+            "text": "How is the migration going?",
+            "translate": "Việc chuyển đổi hệ thống đang tiến triển thế nào?"
+          },
+          {
+            "speaker": "You",
+            "text": "We have fallen behind schedule due to the outage.",
+            "translate": "Chúng tôi bị chậm tiến độ do sự cố ngừng hoạt động."
+          },
+          {
+            "speaker": "Manager",
+            "text": "Understood. Please send me a revised timeline.",
+            "translate": "Đã rõ. Anh gửi tôi mốc thời gian đã điều chỉnh nhé."
+          }
         ],
         "words": [
           {
@@ -36,7 +48,14 @@
                 "prompt": "Từ nào có nghĩa là \"tiến độ, lịch trình\"?",
                 "answer": "schedule",
                 "explain_vi": "Schedule = kế hoạch thời gian.",
-                "payload": { "options": ["schedule", "scholar", "scheduling", "schedule book"] }
+                "payload": {
+                  "options": [
+                    "schedule",
+                    "scholar",
+                    "scheduling",
+                    "schedule book"
+                  ]
+                }
               }
             ]
           },
@@ -53,7 +72,10 @@
             "type": "fill_in",
             "prompt": "",
             "answer": "fall behind schedule",
-            "alt": ["fallen behind schedule", "fell behind schedule"],
+            "alt": [
+              "fallen behind schedule",
+              "fell behind schedule"
+            ],
             "explain_vi": "Diễn tả việc bị chậm so với kế hoạch ban đầu.",
             "pattern": "S+V+O",
             "payload": {
@@ -91,8 +113,16 @@
           }
         ],
         "conversation": [
-          { "speaker": "A", "text": "Is the feature ready for demo tomorrow?" },
-          { "speaker": "B", "text": "Honestly, we're running late on this. Can we push to Friday?" }
+          {
+            "speaker": "A",
+            "text": "Is the feature ready for demo tomorrow?",
+            "translate": "Tính năng đó mai demo được chưa?"
+          },
+          {
+            "speaker": "B",
+            "text": "Honestly, we're running late on this. Can we push to Friday?",
+            "translate": "Thật ra bọn mình đang trễ vụ này. Dời sang thứ Sáu được không?"
+          }
         ],
         "words": [
           {
@@ -115,10 +145,15 @@
             "type": "fill_in",
             "prompt": "",
             "answer": "running late on this",
-            "alt": ["running late"],
+            "alt": [
+              "running late"
+            ],
             "explain_vi": "Cách nói thân mật khi báo với đồng nghiệp là đang bị trễ.",
             "pattern": "S+V+C",
-            "payload": { "before": "Sorry, we're ", "after": " — need two more days." }
+            "payload": {
+              "before": "Sorry, we're ",
+              "after": " — need two more days."
+            }
           },
           {
             "type": "multiple_choice",
