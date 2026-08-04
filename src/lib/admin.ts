@@ -89,6 +89,7 @@ export interface AdminWordPatch {
 export interface AdminCollocationPatch {
   status?: WordStatus;
   category_slug?: string | null;
+  register?: "formal" | "casual";
   literal_meaning?: string;
   note_vi?: string;
 }

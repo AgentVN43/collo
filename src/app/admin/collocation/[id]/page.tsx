@@ -7,7 +7,16 @@ import CollocationDetail from "@/components/CollocationDetail";
 import { getSupabase } from "@/lib/supabase";
 import { fetchCollocationAdmin } from "@/lib/collocations";
 import { adminUpdateContent, type AdminCollocationPatch } from "@/lib/admin";
-import { STATUS_LABELS, type Category, type Collocation, type Word } from "@/lib/types";
+import {
+  REGISTERS,
+  REGISTER_HINTS,
+  REGISTER_LABELS,
+  STATUS_LABELS,
+  type Category,
+  type Collocation,
+  type Register,
+  type Word,
+} from "@/lib/types";
 
 export default function AdminCollocationPage() {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +26,7 @@ export default function AdminCollocationPage() {
   const [words, setWords] = useState<Word[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [category, setCategory] = useState<string>("");
+  const [register, setRegister] = useState<Register>("formal");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,6 +46,7 @@ export default function AdminCollocationPage() {
     ]).then(([c, catRes, linkRes]) => {
       setCollocation(c);
       setCategory(c?.category_slug ?? "");
+      setRegister(c?.register ?? "formal");
       if (c) setForm({ literal_meaning: c.literal_meaning, note_vi: c.note_vi });
       setCategories((catRes.data as Category[]) ?? []);
       // PostgREST trả embed dạng mảng lồng — cast qua unknown rồi làm phẳng
@@ -70,6 +81,12 @@ export default function AdminCollocationPage() {
   const changeCategory = async (slug: string) => {
     setCategory(slug);
     await update({ category_slug: slug || null });
+  };
+
+  const changeRegister = async (value: Register) => {
+    setRegister(value);
+    if (collocation) setCollocation({ ...collocation, register: value });
+    await update({ register: value });
   };
 
   const saveContent = async () => {
@@ -137,6 +154,35 @@ export default function AdminCollocationPage() {
             ))}
           </select>
         </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-semibold text-gray-500">Sắc thái (register)</label>
+          <div className="grid grid-cols-2 gap-2">
+            {REGISTERS.map((r) => (
+              <button
+                key={r}
+                onClick={() => changeRegister(r)}
+                disabled={busy}
+                className={`rounded-xl border-2 px-3 py-2.5 text-left ${
+                  register === r ? "border-blue-600 bg-blue-50" : "border-gray-200"
+                }`}
+              >
+                <span className="block font-semibold text-gray-900">{REGISTER_LABELS[r]}</span>
+                <span className="block text-xs text-gray-500">{REGISTER_HINTS[r]}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {collocation.intent && (
+          <div className="rounded-xl border border-purple-200 bg-purple-50 px-3 py-2.5">
+            <p className="text-xs font-semibold uppercase text-purple-500">Ý định giao tiếp</p>
+            <p className="font-semibold text-purple-900">{collocation.intent.name_vi}</p>
+            {collocation.intent.description_vi && (
+              <p className="mt-0.5 text-sm text-purple-800">{collocation.intent.description_vi}</p>
+            )}
+          </div>
+        )}
 
         <div className="space-y-3 rounded-2xl border border-gray-200 p-3">
           <h3 className="text-sm font-semibold text-gray-700">Sửa nội dung</h3>
@@ -234,7 +280,7 @@ export default function AdminCollocationPage() {
         <div className="grid grid-cols-3 gap-2 text-center">
           {[
             ["Ví dụ", collocation.examples.length],
-            ["Ngữ cảnh", collocation.variants.length],
+            ["Lượt thoại", collocation.conversation.length],
             ["Bài tập", collocation.exercises.length],
           ].map(([label, n]) => (
             <div key={label as string} className="rounded-xl bg-gray-50 py-2">

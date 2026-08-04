@@ -1,39 +1,59 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import type { Collocation, Word } from "@/lib/types";
-import { VARIANT_LABELS } from "@/lib/types";
+import type { Collocation, Register, Word } from "@/lib/types";
+import { REGISTER_HINTS, REGISTER_LABELS } from "@/lib/types";
 import SpeakButton from "./SpeakButton";
 
-const CONTEXT_STYLE: Record<string, string> = {
-  casual: "bg-emerald-50 border-emerald-200 text-emerald-800",
+const REGISTER_STYLE: Record<Register, string> = {
   formal: "bg-indigo-50 border-indigo-200 text-indigo-800",
-  alternative: "bg-amber-50 border-amber-200 text-amber-800",
+  casual: "bg-emerald-50 border-emerald-200 text-emerald-800",
 };
 
-/** Nội dung chi tiết của một COLLOCATION — dùng ở /collocation/[id] và bottom sheet Practice. */
+export function RegisterBadge({ register, className = "" }: { register: Register; className?: string }) {
+  return (
+    <span
+      title={REGISTER_HINTS[register]}
+      className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium ${REGISTER_STYLE[register]} ${className}`}
+    >
+      {REGISTER_LABELS[register]}
+    </span>
+  );
+}
+
+/** Nội dung chi tiết của một CÁCH NÓI — dùng ở /collocation/[id] và bottom sheet Practice. */
 export default function CollocationDetail({
   collocation,
   words = [],
+  siblings = [],
   locked = false,
 }: {
   collocation: Collocation;
   /** Các từ đơn cấu thành (để link ngược về /word/[id]). */
   words?: Word[];
+  /** Cách nói khác cùng ý định — phần cốt lõi của mô hình Intent. */
+  siblings?: Collocation[];
   locked?: boolean;
 }) {
-  const [openVariant, setOpenVariant] = useState<string | null>(
-    collocation.variants[0]?.id ?? null
-  );
-
   return (
     <div className="px-4 pb-6">
+      {/* Ý định giao tiếp: đặt lên đầu vì đó là cái người học muốn nói */}
+      {collocation.intent && (
+        <div className="mt-4 rounded-xl bg-purple-50 border border-purple-200 px-3 py-2.5">
+          <p className="text-xs font-semibold uppercase text-purple-500">Ý định giao tiếp</p>
+          <p className="font-semibold text-purple-900">{collocation.intent.name_vi}</p>
+          {collocation.intent.description_vi && (
+            <p className="mt-0.5 text-sm text-purple-800">{collocation.intent.description_vi}</p>
+          )}
+        </div>
+      )}
+
       {/* Khối đầu */}
       <div className="py-4 border-b border-gray-100">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-2xl font-bold text-gray-900">{collocation.chunk}</span>
           <SpeakButton text={collocation.chunk} />
+          <RegisterBadge register={collocation.register} />
           {locked && (
             <span className="text-lg" aria-label="Chưa mở khoá" title="Học thuộc các từ đơn để mở khoá">
               🔒
@@ -41,12 +61,39 @@ export default function CollocationDetail({
           )}
         </div>
         <p className="mt-2 text-gray-800">{collocation.literal_meaning}</p>
+        <p className="mt-1 text-xs text-gray-500">{REGISTER_HINTS[collocation.register]}</p>
         {collocation.topic && collocation.topic !== "Chưa phân loại" && (
-          <span className="mt-2 inline-block rounded-full bg-purple-50 border border-purple-200 px-2.5 py-0.5 text-xs font-medium text-purple-700">
+          <span className="mt-2 inline-block rounded-full bg-gray-100 border border-gray-200 px-2.5 py-0.5 text-xs font-medium text-gray-700">
             {collocation.topic}
           </span>
         )}
       </div>
+
+      {/* Cách nói khác cùng ý định */}
+      {siblings.length > 0 && (
+        <div className="py-4 border-b border-gray-100">
+          <h2 className="text-sm font-semibold text-gray-500 uppercase mb-2">
+            Cùng ý định, khác hoàn cảnh
+          </h2>
+          <ul className="space-y-2">
+            {siblings.map((s) => (
+              <li key={s.id}>
+                <Link
+                  href={`/collocation/${s.id}`}
+                  className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2.5"
+                >
+                  <RegisterBadge register={s.register} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-semibold text-gray-900">{s.chunk}</span>
+                    <span className="block truncate text-sm text-gray-600">{s.literal_meaning}</span>
+                  </span>
+                  <span className="text-gray-300">›</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Cách dùng */}
       {collocation.note_vi && (
@@ -98,74 +145,34 @@ export default function CollocationDetail({
         </div>
       )}
 
-      {/* Sắc thái theo ngữ cảnh + hội thoại mẫu */}
-      {collocation.variants.length > 0 && (
-        <>
-          <h2 className="text-sm font-semibold text-gray-500 uppercase mt-4 mb-2">
-            Nói theo ngữ cảnh
-          </h2>
+      {/* Hội thoại mẫu — minh hoạ chính cách nói này trong hoàn cảnh của nó */}
+      {collocation.conversation.length > 0 && (
+        <div className="py-4">
+          <h2 className="text-sm font-semibold text-gray-500 uppercase mb-2">Hội thoại mẫu</h2>
           <div className="space-y-2">
-            {collocation.variants.map((v) => {
-              const isOpen = openVariant === v.id;
+            {collocation.conversation.map((turn, i) => {
+              // Lượt của người nói đầu tiên căn trái, người còn lại căn phải
+              const isFirst = turn.speaker === collocation.conversation[0].speaker;
               return (
-                <div key={v.id} className="rounded-xl border border-gray-200 overflow-hidden">
-                  <button
-                    onClick={() => setOpenVariant(isOpen ? null : v.id)}
-                    className="flex w-full items-center gap-2 bg-gray-50 px-4 py-3 text-left"
+                <div key={i} className={`flex ${isFirst ? "justify-start" : "justify-end"}`}>
+                  <div
+                    className={`max-w-[85%] rounded-2xl px-3 py-2 ${
+                      isFirst
+                        ? "rounded-bl-sm bg-gray-100 text-gray-900"
+                        : "rounded-br-sm bg-blue-600 text-white"
+                    }`}
                   >
-                    <span
-                      className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium ${
-                        CONTEXT_STYLE[v.context] ?? "bg-gray-100 border-gray-200 text-gray-700"
-                      }`}
-                    >
-                      {VARIANT_LABELS[v.context] ?? v.context}
-                    </span>
-                    <span className="flex-1 min-w-0 truncate font-medium text-gray-900">
-                      {v.text_variant}
-                    </span>
-                    <span className="text-gray-400">{isOpen ? "▾" : "▸"}</span>
-                  </button>
-                  {isOpen && (
-                    <div className="px-4 py-3 space-y-3">
-                      <p className="flex items-center gap-2 text-gray-900">
-                        <span className="italic">{v.text_variant}</span>
-                        <SpeakButton text={v.text_variant} className="text-base" />
-                      </p>
-                      {v.conversation.length > 0 && (
-                        <div className="space-y-2">
-                          {v.conversation.map((turn, i) => {
-                            // Lượt của người nói đầu tiên căn trái, các người nói khác căn phải
-                            const isFirst = turn.speaker === v.conversation[0].speaker;
-                            return (
-                              <div
-                                key={i}
-                                className={`flex ${isFirst ? "justify-start" : "justify-end"}`}
-                              >
-                                <div
-                                  className={`max-w-[85%] rounded-2xl px-3 py-2 ${
-                                    isFirst
-                                      ? "rounded-bl-sm bg-gray-100 text-gray-900"
-                                      : "rounded-br-sm bg-blue-600 text-white"
-                                  }`}
-                                >
-                                  <p className="text-xs opacity-70">{turn.speaker}</p>
-                                  <p className="flex items-center gap-1.5 text-sm">
-                                    {turn.text}
-                                    <SpeakButton text={turn.text} className="text-sm" />
-                                  </p>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                    <p className="text-xs opacity-70">{turn.speaker}</p>
+                    <p className="flex items-center gap-1.5 text-sm">
+                      {turn.text}
+                      <SpeakButton text={turn.text} className="text-sm" />
+                    </p>
+                  </div>
                 </div>
               );
             })}
           </div>
-        </>
+        </div>
       )}
     </div>
   );

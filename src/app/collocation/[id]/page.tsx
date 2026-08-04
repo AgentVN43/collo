@@ -6,7 +6,7 @@ import TopBar from "@/components/TopBar";
 import CollocationDetail from "@/components/CollocationDetail";
 import { getSupabase } from "@/lib/supabase";
 import { useSession } from "@/lib/useSession";
-import { fetchCollocation } from "@/lib/collocations";
+import { fetchCollocation, fetchCollocations, siblingsOf } from "@/lib/collocations";
 import { fetchWords } from "@/lib/words";
 import { isUnlocked } from "@/lib/progress";
 import type { Collocation, ProgressRow, Word } from "@/lib/types";
@@ -17,15 +17,21 @@ export default function CollocationPage() {
   const { userId } = useSession();
   const [collocation, setCollocation] = useState<Collocation | null>(null);
   const [words, setWords] = useState<Word[]>([]);
+  const [siblings, setSiblings] = useState<Collocation[]>([]);
   const [progress, setProgress] = useState<ProgressRow[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = getSupabase();
 
   useEffect(() => {
     if (!supabase || !id) return;
-    Promise.all([fetchCollocation(supabase, id), fetchWords(supabase)]).then(([c, allWords]) => {
+    Promise.all([
+      fetchCollocation(supabase, id),
+      fetchWords(supabase),
+      fetchCollocations(supabase),
+    ]).then(([c, allWords, allCollocations]) => {
       setCollocation(c);
       setWords(c ? allWords.filter((w) => c.word_ids.includes(w.id)) : []);
+      setSiblings(c ? siblingsOf(allCollocations, c) : []);
       setLoading(false);
     });
   }, [supabase, id]);
@@ -49,7 +55,12 @@ export default function CollocationPage() {
       )}
       {collocation && (
         <>
-          <CollocationDetail collocation={collocation} words={words} locked={locked} />
+          <CollocationDetail
+            collocation={collocation}
+            words={words}
+            siblings={siblings}
+            locked={locked}
+          />
           {locked && (
             <p className="mx-4 mb-4 rounded-xl bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
               🔒 Cụm này chưa mở khoá — học thuộc các từ đơn cấu thành (Level 1) để nó được ưu tiên

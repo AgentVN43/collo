@@ -11,6 +11,7 @@ import { fetchWords } from "@/lib/words";
 import { fetchCollocations } from "@/lib/collocations";
 import { savedWordIds } from "@/lib/collections";
 import CollectionSheet from "@/components/CollectionSheet";
+import { RegisterBadge } from "@/components/CollocationDetail";
 import type { Collocation, ProgressRow, Word } from "@/lib/types";
 
 const DOT_CLASS = {
@@ -83,7 +84,10 @@ export default function HomePage() {
   const sections = useMemo(() => {
     const filtered = q
       ? collocations.filter(
-          (c) => c.chunk.toLowerCase().includes(q) || c.literal_meaning.toLowerCase().includes(q)
+          (c) =>
+            c.chunk.toLowerCase().includes(q) ||
+            c.literal_meaning.toLowerCase().includes(q) ||
+            (c.intent?.name_vi.toLowerCase().includes(q) ?? false)
         )
       : collocations;
     const byTopic = new Map<string, { order: number; list: Collocation[] }>();
@@ -212,7 +216,10 @@ export default function HomePage() {
                         <span className="flex-1 min-w-0">
                           <span className="flex items-center gap-2">
                             <span className={`w-2 h-2 rounded-full shrink-0 ${DOT_CLASS[dot]}`} />
-                            <span className="text-base font-bold text-gray-900">{c.chunk}</span>
+                            <span className="truncate text-base font-bold text-gray-900">
+                              {c.chunk}
+                            </span>
+                            <RegisterBadge register={c.register} />
                             {locked && (
                               <span
                                 className="text-sm"
@@ -224,6 +231,11 @@ export default function HomePage() {
                             )}
                           </span>
                           <p className="truncate text-sm text-gray-700">{c.literal_meaning}</p>
+                          {c.intent && (
+                            <p className="truncate text-xs text-purple-600">
+                              🎯 {c.intent.name_vi}
+                            </p>
+                          )}
                         </span>
                         <span className="text-gray-300">›</span>
                       </Link>

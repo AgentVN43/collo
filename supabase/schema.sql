@@ -38,7 +38,9 @@ insert into public.categories (slug, name, sort_order, description) values
   ('verb-preposition', 'Verb + Expression with Preposition', 6,
    'Động từ + cụm giới từ cố định, vd: burst into tears (KHÔNG dùng "blow up in tears").'),
   ('verb-adverb', 'Verb + Adverb', 7,
-   'Động từ bổ nghĩa bởi trạng từ đặc trưng, vd: wave frantically (KHÔNG dùng "wave feverishly").')
+   'Động từ bổ nghĩa bởi trạng từ đặc trưng, vd: wave frantically (KHÔNG dùng "wave feverishly").'),
+  ('other', 'Other', 99,
+   'Cách nói không thuộc 7 loại chuẩn: câu hoàn chỉnh, thành ngữ, cụm khẩu ngữ. Thường là biến thể casual của một ý định.')
 on conflict (slug) do update set
   name = excluded.name,
   sort_order = excluded.sort_order,
@@ -94,20 +96,61 @@ create policy "words_admin_update" on public.words
   for update using (exists (select 1 from public.admins a where a.email = auth.jwt() ->> 'email'))
   with check (exists (select 1 from public.admins a where a.email = auth.jwt() ->> 'email'));
 
+-- ==================== Ý ĐỊNH GIAO TIẾP ====================
+
+-- Intent = điều người học muốn NÓI ("báo dự án đang chậm tiến độ").
+-- Các cách nói khác nhau cho cùng ý định nằm dưới nó dưới dạng collocation, khác nhau ở
+-- register. Đây là cái hộp gom nhóm — trước đây vai trò này bị nhét nhầm vào một cột
+-- "alternative" của bảng variants, khiến các cách nói phụ không tra cứu/luyện được.
+create table if not exists public.intents (
+  id uuid primary key default gen_random_uuid(),
+  name_vi text not null unique,
+  description_vi text not null default '',
+  situation text not null default '',
+  status text not null default 'draft' check (status in ('draft', 'processing', 'published', 'archived')),
+  created_at timestamptz not null default now()
+);
+
+alter table public.intents enable row level security;
+
+drop policy if exists "intents_public_read" on public.intents;
+create policy "intents_public_read" on public.intents
+  for select using (status = 'published');
+
+drop policy if exists "intents_admin_read" on public.intents;
+create policy "intents_admin_read" on public.intents
+  for select using (exists (select 1 from public.admins a where a.email = auth.jwt() ->> 'email'));
+
+drop policy if exists "intents_admin_insert" on public.intents;
+create policy "intents_admin_insert" on public.intents
+  for insert with check (exists (select 1 from public.admins a where a.email = auth.jwt() ->> 'email'));
+
+drop policy if exists "intents_admin_update" on public.intents;
+create policy "intents_admin_update" on public.intents
+  for update using (exists (select 1 from public.admins a where a.email = auth.jwt() ->> 'email'))
+  with check (exists (select 1 from public.admins a where a.email = auth.jwt() ->> 'email'));
+
 -- ==================== COLLOCATION ====================
 
--- Collocation = đơn vị Level 2. examples là mảng [{en, vi, pattern?}] — thuần hiển thị,
--- pattern là công thức ngữ pháp (vd "S+V+O") cho biết cụm đóng vai trò gì trong câu.
+-- Collocation = một CÁCH NÓI cụ thể, đơn vị Level 2.
+--   register: formal (email/báo cáo/khách/sếp) | casual (chat, Slack/Zalo/Viber)
+--   conversation: đoạn thoại ngắn minh hoạ chính cách nói này, [{speaker, text}]
+--   examples: [{en, vi, pattern?}] — pattern là công thức ngữ pháp của câu (vd "S+V+O")
 create table if not exists public.collocations (
   id uuid primary key default gen_random_uuid(),
   chunk text not null unique,
   literal_meaning text not null default '',
   category_slug text references public.categories(slug),
+  intent_id uuid references public.intents(id) on delete set null,
+  register text not null default 'formal' check (register in ('formal', 'casual')),
   note_vi text not null default '',
   examples jsonb not null default '[]'::jsonb,
+  conversation jsonb not null default '[]'::jsonb,
   status text not null default 'draft' check (status in ('draft', 'processing', 'published', 'archived')),
   created_at timestamptz not null default now()
 );
+
+create index if not exists collocations_intent_idx on public.collocations (intent_id);
 
 alter table public.collocations enable row level security;
 
@@ -152,31 +195,9 @@ create policy "word_collocations_admin_all" on public.word_collocations
   using (exists (select 1 from public.admins a where a.email = auth.jwt() ->> 'email'))
   with check (exists (select 1 from public.admins a where a.email = auth.jwt() ->> 'email'));
 
--- Sắc thái theo ngữ cảnh + hội thoại mẫu. conversation = [{speaker, text}].
-create table if not exists public.collocation_variants (
-  id uuid primary key default gen_random_uuid(),
-  collocation_id uuid not null references public.collocations(id) on delete cascade,
-  context text not null check (context in ('casual', 'formal', 'alternative')),
-  text_variant text not null default '',
-  conversation jsonb not null default '[]'::jsonb,
-  sort_order int not null default 0
-);
-
-create index if not exists collocation_variants_collocation_idx
-  on public.collocation_variants (collocation_id);
-
-alter table public.collocation_variants enable row level security;
-
-drop policy if exists "collocation_variants_public_read" on public.collocation_variants;
-create policy "collocation_variants_public_read" on public.collocation_variants
-  for select
-  using (exists (select 1 from public.collocations c where c.id = collocation_id and c.status = 'published'));
-
-drop policy if exists "collocation_variants_admin_all" on public.collocation_variants;
-create policy "collocation_variants_admin_all" on public.collocation_variants
-  for all
-  using (exists (select 1 from public.admins a where a.email = auth.jwt() ->> 'email'))
-  with check (exists (select 1 from public.admins a where a.email = auth.jwt() ->> 'email'));
+-- (Bảng collocation_variants đã bị bỏ — xem supabase/intent-migration.sql.
+--  Sắc thái giờ là cột collocations.register, hội thoại là cột collocations.conversation,
+--  và việc gom các cách nói cùng một ý do bảng intents đảm nhiệm.)
 
 -- ==================== BÀI TẬP ====================
 

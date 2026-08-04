@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { Collocation, Word } from "@/lib/types";
 import SpeakButton from "./SpeakButton";
+import { RegisterBadge } from "./CollocationDetail";
 
 /** Nội dung chi tiết của một TỪ ĐƠN — dùng ở /word/[id] và bottom sheet trong Practice. */
 export default function WordDetail({
@@ -83,7 +84,8 @@ export default function WordDetail({
                 >
                   <span className="flex-1 min-w-0">
                     <span className="flex items-center gap-2">
-                      <span className="font-semibold text-gray-900">{c.chunk}</span>
+                      <span className="truncate font-semibold text-gray-900">{c.chunk}</span>
+                      <RegisterBadge register={c.register} />
                       {locked && (
                         <span aria-label="Chưa mở khoá" title="Học thuộc các từ đơn để mở khoá">
                           🔒
@@ -93,6 +95,11 @@ export default function WordDetail({
                     <span className="block truncate text-sm text-gray-600">
                       {c.literal_meaning}
                     </span>
+                    {c.intent && (
+                      <span className="block truncate text-xs text-purple-600">
+                        🎯 {c.intent.name_vi}
+                      </span>
+                    )}
                   </span>
                   <span className="text-gray-300">›</span>
                 </Link>

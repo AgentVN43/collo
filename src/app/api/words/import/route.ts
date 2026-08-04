@@ -6,35 +6,39 @@ export const runtime = "nodejs";
 /**
  * POST /api/words/import
  * Header:  x-api-key: <IMPORT_API_KEY>
- * Body:    một object hoặc mảng object theo shape dưới đây.
+ * Body:    một object hoặc mảng object, gom theo Ý ĐỊNH GIAO TIẾP:
  *
  * {
- *   "word": "pain", "word_type": "n.",
- *   "meaning_vi": "cơn đau", "meaning_en": "…", "basics_vi": "…", "status": "draft",
- *   "exercises": [ … ],                      // bài tập cho chính TỪ ĐƠN (Level 1) — tuỳ chọn
+ *   "intent": "báo dự án đang chậm tiến độ",
+ *   "description_vi": "Khi tiến độ thực tế chậm hơn kế hoạch…",
+ *   "situation": "quản lý dự án",
+ *   "status": "draft",
  *   "collocations": [{
- *     "chunk": "excruciating pain",
- *     "literal_meaning": "cơn đau dữ dội",
- *     "category": "adjective-noun",          // 1 trong 7 slug ở bảng categories
+ *     "chunk": "fall behind schedule",
+ *     "register": "formal",                 // formal | casual
+ *     "category": "verb-preposition",       // 7 slug chuẩn, hoặc "other"
+ *     "literal_meaning": "rơi vào tình trạng chậm tiến độ",
  *     "note_vi": "…",
- *     "examples": [{ "en": "…", "vi": "…", "pattern": "S+V+C" }],
- *     "also_words": ["excruciating"],        // từ đơn khác cùng tạo nên cụm này
- *     "variants": [{ "context": "formal", "text_variant": "…",
- *                    "conversation": [{ "speaker": "A", "text": "…" }] }],
- *     "exercises": [{ "type": "fill_in", "prompt": "…", "answer": "…", "alt": [],
- *                     "explain_vi": "…", "pattern": "S+V+C",
+ *     "examples": [{ "en": "…", "vi": "…", "pattern": "S+V+O" }],
+ *     "conversation": [{ "speaker": "A", "text": "…" }],
+ *     "words": [{ "word": "schedule", "word_type": "n.", "meaning_vi": "…",
+ *                 "meaning_en": "…", "basics_vi": "…" }],
+ *     "exercises": [{ "type": "fill_in", "answer": "…", "explain_vi": "…",
  *                     "payload": { "before": "…", "after": "…" } }]
  *   }]
  * }
  *
- * Upsert `words` theo cột `word`, `collocations` theo cột `chunk`. Variants và exercises của
- * mỗi collocation được THAY THẾ TOÀN BỘ (xoá cũ rồi chèn mới) — gửi lại bao nhiêu lần cũng
- * ra cùng kết quả. Từ trong `also_words` chưa có sẵn sẽ được tự tạo ở trạng thái draft.
+ * Upsert `intents` theo `name_vi`, `collocations` theo `chunk`, `words` theo `word`.
+ * Conversation nằm ngay trên collocation (mỗi cách nói tự minh hoạ). Exercises của mỗi
+ * collocation/từ được THAY THẾ TOÀN BỘ nên gửi lại nhiều lần vẫn ra cùng kết quả.
+ *
+ * "words" có thể chỉ ghi tên (chuỗi) nếu chưa có nghĩa — khi đó từ được tạo ở trạng thái
+ * draft để bổ sung sau.
  */
 
 const STATUSES = ["draft", "processing", "published", "archived"];
 const EXERCISE_TYPES = ["fill_in", "multiple_choice", "conversation_gap"];
-const VARIANT_CONTEXTS = ["casual", "formal", "alternative"];
+const REGISTERS = ["formal", "casual"];
 
 type Raw = Record<string, unknown>;
 
@@ -54,25 +58,6 @@ interface ParsedExercise {
   sort_order: number;
 }
 
-interface ParsedVariant {
-  context: string;
-  text_variant: string;
-  conversation: { speaker: string; text: string }[];
-  sort_order: number;
-}
-
-interface ParsedCollocation {
-  chunk: string;
-  literal_meaning: string;
-  category_slug: string;
-  note_vi: string;
-  examples: Raw[];
-  status: string;
-  also_words: string[];
-  variants: ParsedVariant[];
-  exercises: ParsedExercise[];
-}
-
 interface ParsedWord {
   word: string;
   word_type: string;
@@ -80,7 +65,29 @@ interface ParsedWord {
   meaning_en: string;
   basics_vi: string;
   status: string;
+  /** true = chỉ có tên, chưa có nội dung → chỉ tạo mới, không đè lên bản đã có */
+  stub: boolean;
   exercises: ParsedExercise[];
+}
+
+interface ParsedCollocation {
+  chunk: string;
+  literal_meaning: string;
+  category_slug: string;
+  register: string;
+  note_vi: string;
+  examples: Raw[];
+  conversation: { speaker: string; text: string }[];
+  status: string;
+  words: ParsedWord[];
+  exercises: ParsedExercise[];
+}
+
+interface ParsedIntent {
+  name_vi: string;
+  description_vi: string;
+  situation: string;
+  status: string;
   collocations: ParsedCollocation[];
 }
 
@@ -112,9 +119,43 @@ function parseExercises(raw: unknown, where: string, errors: string[]): ParsedEx
   });
 }
 
-function parseItem(raw: Raw, index: number, errors: string[]): ParsedWord {
+/** Từ đơn: chấp nhận cả chuỗi tên lẫn object đầy đủ. */
+function parseWords(raw: unknown, where: string, status: string, errors: string[]): ParsedWord[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((item, i) => {
+    if (typeof item === "string") {
+      const name = item.trim().toLowerCase();
+      if (!name) errors.push(`${where}.words[${i}]: tên từ rỗng`);
+      return {
+        word: name,
+        word_type: "n.",
+        meaning_vi: "",
+        meaning_en: "",
+        basics_vi: "",
+        status: "draft",
+        stub: true,
+        exercises: [],
+      };
+    }
+    const w = (item ?? {}) as Raw;
+    const name = str(w.word).trim().toLowerCase();
+    if (!name) errors.push(`${where}.words[${i}]: thiếu "word"`);
+    return {
+      word: name,
+      word_type: str(w.word_type, "n."),
+      meaning_vi: str(w.meaning_vi),
+      meaning_en: str(w.meaning_en),
+      basics_vi: str(w.basics_vi),
+      status: str(w.status, status),
+      stub: false,
+      exercises: parseExercises(w.exercises, `${where}.words[${i}]`, errors),
+    };
+  });
+}
+
+function parseItem(raw: Raw, index: number, errors: string[]): ParsedIntent {
   const where = `items[${index}]`;
-  if (!str(raw.word).trim()) errors.push(`${where}: thiếu "word"`);
+  if (!str(raw.intent).trim()) errors.push(`${where}: thiếu "intent"`);
   const status = str(raw.status, "draft");
   if (!STATUSES.includes(status)) {
     errors.push(`${where}: "status" phải là ${STATUSES.join(" | ")}`);
@@ -124,68 +165,76 @@ function parseItem(raw: Raw, index: number, errors: string[]): ParsedWord {
     const cw = `${where}.collocations[${ci}]`;
     if (!str(c.chunk).trim()) errors.push(`${cw}: thiếu "chunk"`);
     if (!str(c.category).trim()) {
-      errors.push(`${cw}: thiếu "category" (slug loại collocation, vd "verb-noun")`);
+      errors.push(`${cw}: thiếu "category" (7 slug chuẩn hoặc "other")`);
+    }
+    const register = str(c.register, "formal");
+    if (!REGISTERS.includes(register)) {
+      errors.push(`${cw}: "register" phải là ${REGISTERS.join(" | ")}`);
     }
     const cStatus = str(c.status, status);
     if (!STATUSES.includes(cStatus)) {
       errors.push(`${cw}: "status" phải là ${STATUSES.join(" | ")}`);
     }
 
-    const variants = arr(c.variants).map((v, vi) => {
-      const context = str(v.context);
-      if (!VARIANT_CONTEXTS.includes(context)) {
-        errors.push(`${cw}.variants[${vi}]: "context" phải là ${VARIANT_CONTEXTS.join(" | ")}`);
+    const conversation = arr(c.conversation).map((t, ti) => {
+      if (!str(t.speaker).trim() || !str(t.text).trim()) {
+        errors.push(`${cw}.conversation[${ti}]: cần cả "speaker" và "text"`);
       }
-      const conversation = arr(v.conversation).map((t, ti) => {
-        if (!str(t.speaker).trim() || !str(t.text).trim()) {
-          errors.push(`${cw}.variants[${vi}].conversation[${ti}]: cần cả "speaker" và "text"`);
-        }
-        return { speaker: str(t.speaker), text: str(t.text) };
-      });
-      return { context, text_variant: str(v.text_variant), conversation, sort_order: vi };
+      return { speaker: str(t.speaker), text: str(t.text) };
     });
+
+    const words = parseWords(c.words, cw, cStatus, errors);
+    if (words.length === 0) errors.push(`${cw}: "words" rỗng — cần ít nhất 1 từ đơn cấu thành`);
 
     return {
       chunk: str(c.chunk).trim().toLowerCase(),
       literal_meaning: str(c.literal_meaning),
       category_slug: str(c.category).trim(),
+      register,
       note_vi: str(c.note_vi),
       examples: arr(c.examples),
+      conversation,
       status: cStatus,
-      also_words: strArr(c.also_words).map((w) => w.trim().toLowerCase()).filter(Boolean),
-      variants,
+      words,
       exercises: parseExercises(c.exercises, cw, errors),
     };
   });
 
+  if (collocations.length === 0) {
+    errors.push(`${where}: "collocations" rỗng — mỗi ý định cần ít nhất 1 cách nói`);
+  }
+
   return {
-    word: str(raw.word).trim().toLowerCase(),
-    word_type: str(raw.word_type, "n."),
-    meaning_vi: str(raw.meaning_vi),
-    meaning_en: str(raw.meaning_en),
-    basics_vi: str(raw.basics_vi),
+    name_vi: str(raw.intent).trim(),
+    description_vi: str(raw.description_vi),
+    situation: str(raw.situation),
     status,
-    exercises: parseExercises(raw.exercises, where, errors),
     collocations,
   };
 }
 
-/** Upsert nhiều từ đơn theo tên, trả map word -> id. Từ chỉ có tên được tạo ở draft. */
+/** Upsert từ đơn: bản đầy đủ ghi đè nội dung, bản stub chỉ tạo mới. */
 async function upsertWords(
   db: SupabaseClient,
-  full: ParsedWord[],
-  extraNames: string[]
+  words: ParsedWord[]
 ): Promise<{ ids: Map<string, string>; created: string[] } | { error: string }> {
-  const fullNames = [...new Set(full.map((w) => w.word))];
-  const stubNames = [...new Set(extraNames)].filter((n) => !fullNames.includes(n));
+  const full = new Map<string, ParsedWord>();
+  const stubs = new Set<string>();
+  for (const w of words) {
+    if (!w.word) continue;
+    if (w.stub) {
+      if (!full.has(w.word)) stubs.add(w.word);
+    } else {
+      full.set(w.word, w);
+      stubs.delete(w.word);
+    }
+  }
 
-  // PostgREST bắt mọi object trong 1 bulk upsert phải CÙNG bộ key (PGRST102) — nên từ đầy đủ
-  // và từ stub phải đi thành hai lệnh riêng, không gộp chung mảng.
-
-  // 1. Từ có nội dung đầy đủ → upsert (đè nội dung mới lên bản cũ)
-  if (full.length > 0) {
+  // PostgREST bắt mọi object trong 1 bulk upsert phải CÙNG bộ key (PGRST102) →
+  // bản đầy đủ và bản stub phải đi hai lệnh riêng.
+  if (full.size > 0) {
     const { error } = await db.from("words").upsert(
-      full.map((w) => ({
+      [...full.values()].map((w) => ({
         word: w.word,
         word_type: w.word_type,
         meaning_vi: w.meaning_vi,
@@ -198,16 +247,13 @@ async function upsertWords(
     if (error) return { error: error.message };
   }
 
-  // 2. Từ chỉ được nhắc trong also_words → CHỈ tạo mới, không đè lên bản đã có
   let created: string[] = [];
-  if (stubNames.length > 0) {
-    const { data: existing, error: exErr } = await db
-      .from("words")
-      .select("word")
-      .in("word", stubNames);
+  if (stubs.size > 0) {
+    const names = [...stubs];
+    const { data: existing, error: exErr } = await db.from("words").select("word").in("word", names);
     if (exErr) return { error: exErr.message };
     const known = new Set((existing ?? []).map((r) => r.word as string));
-    created = stubNames.filter((n) => !known.has(n));
+    created = names.filter((n) => !known.has(n));
     if (created.length > 0) {
       const { error } = await db
         .from("words")
@@ -216,16 +262,27 @@ async function upsertWords(
     }
   }
 
-  // 3. Lấy id của toàn bộ từ liên quan (gồm cả bản đã có sẵn từ trước)
-  const allNames = [...fullNames, ...stubNames];
+  const allNames = [...new Set([...full.keys(), ...stubs])];
   if (allNames.length === 0) return { ids: new Map(), created };
   const { data, error } = await db.from("words").select("id, word").in("word", allNames);
   if (error) return { error: error.message };
+  return { ids: new Map((data ?? []).map((r) => [r.word as string, r.id as string])), created };
+}
 
-  return {
-    ids: new Map((data ?? []).map((r) => [r.word as string, r.id as string])),
-    created,
-  };
+/** Xoá rồi chèn lại exercises của một chủ thể — gửi lại nhiều lần vẫn ra cùng kết quả. */
+async function replaceExercises(
+  db: SupabaseClient,
+  column: "word_id" | "collocation_id",
+  ownerId: string,
+  exercises: ParsedExercise[]
+): Promise<string | null> {
+  const { error: delErr } = await db.from("exercises").delete().eq(column, ownerId);
+  if (delErr) return delErr.message;
+  if (exercises.length === 0) return null;
+  const { error } = await db
+    .from("exercises")
+    .insert(exercises.map((e) => ({ ...e, [column]: ownerId })));
+  return error ? error.message : null;
 }
 
 export async function POST(req: NextRequest) {
@@ -256,7 +313,7 @@ export async function POST(req: NextRequest) {
   }
 
   const db = createClient(url, serviceKey);
-  const allCollocations = items.flatMap((w) => w.collocations);
+  const allCollocations = items.flatMap((it) => it.collocations);
 
   // Slug category phải tồn tại trước — chặn typo tạo nhóm rác
   const usedSlugs = [...new Set(allCollocations.map((c) => c.category_slug))];
@@ -270,123 +327,110 @@ export async function POST(req: NextRequest) {
     const unknown = usedSlugs.filter((s) => !knownSet.has(s));
     if (unknown.length > 0) {
       return NextResponse.json(
-        { error: `Category slug không tồn tại: ${unknown.join(", ")}. Thêm vào bảng categories trước.` },
+        { error: `Category slug không tồn tại: ${unknown.join(", ")}. Dùng 1 trong 7 slug chuẩn hoặc "other".` },
         { status: 400 }
       );
     }
   }
 
-  // 1. Từ đơn (gồm cả also_words được tự tạo nháp)
-  const wordResult = await upsertWords(
-    db,
-    items,
-    allCollocations.flatMap((c) => c.also_words)
-  );
+  // 1. Ý định giao tiếp
+  const { data: intentRows, error: intentErr } = await db
+    .from("intents")
+    .upsert(
+      items.map((it) => ({
+        name_vi: it.name_vi,
+        description_vi: it.description_vi,
+        situation: it.situation,
+        status: it.status,
+      })),
+      { onConflict: "name_vi" }
+    )
+    .select("id, name_vi");
+  if (intentErr) {
+    return NextResponse.json({ error: `Ghi intents thất bại: ${intentErr.message}` }, { status: 500 });
+  }
+  const intentIds = new Map((intentRows ?? []).map((r) => [r.name_vi as string, r.id as string]));
+
+  // 2. Từ đơn (gồm cả bản stub được tạo nháp)
+  const wordResult = await upsertWords(db, allCollocations.flatMap((c) => c.words));
   if ("error" in wordResult) {
     return NextResponse.json({ error: `Ghi words thất bại: ${wordResult.error}` }, { status: 500 });
   }
   const { ids: wordIds, created: autoCreated } = wordResult;
 
-  // 2. Bài tập cấp từ đơn — thay thế toàn bộ
-  for (const w of items) {
-    const wordId = wordIds.get(w.word);
-    if (!wordId) continue;
-    await db.from("exercises").delete().eq("word_id", wordId);
-    if (w.exercises.length > 0) {
-      const { error } = await db
-        .from("exercises")
-        .insert(w.exercises.map((e) => ({ ...e, word_id: wordId })));
+  // 3. Collocations
+  const { data: colRows, error: colErr } = await db
+    .from("collocations")
+    .upsert(
+      items.flatMap((it) =>
+        it.collocations.map((c) => ({
+          chunk: c.chunk,
+          literal_meaning: c.literal_meaning,
+          category_slug: c.category_slug,
+          intent_id: intentIds.get(it.name_vi) ?? null,
+          register: c.register,
+          note_vi: c.note_vi,
+          examples: c.examples,
+          conversation: c.conversation,
+          status: c.status,
+        }))
+      ),
+      { onConflict: "chunk" }
+    )
+    .select("id, chunk");
+  if (colErr) {
+    return NextResponse.json({ error: `Ghi collocations thất bại: ${colErr.message}` }, { status: 500 });
+  }
+  const collocationIds = new Map((colRows ?? []).map((r) => [r.chunk as string, r.id as string]));
+
+  // 4. Liên kết từ đơn ↔ collocation, và bài tập của cả hai phía
+  const doneWords = new Set<string>();
+  for (const c of allCollocations) {
+    const cid = collocationIds.get(c.chunk);
+    if (!cid) continue;
+
+    const linkIds = c.words.map((w) => wordIds.get(w.word)).filter(Boolean) as string[];
+    if (linkIds.length > 0) {
+      const { error } = await db.from("word_collocations").upsert(
+        [...new Set(linkIds)].map((word_id) => ({ word_id, collocation_id: cid })),
+        { onConflict: "word_id,collocation_id", ignoreDuplicates: true }
+      );
       if (error) {
         return NextResponse.json(
-          { error: `Ghi exercises của "${w.word}" thất bại: ${error.message}` },
+          { error: `Liên kết "${c.chunk}" thất bại: ${error.message}` },
+          { status: 500 }
+        );
+      }
+    }
+
+    const colExErr = await replaceExercises(db, "collocation_id", cid, c.exercises);
+    if (colExErr) {
+      return NextResponse.json(
+        { error: `Ghi exercises của "${c.chunk}" thất bại: ${colExErr}` },
+        { status: 500 }
+      );
+    }
+
+    for (const w of c.words) {
+      const wid = wordIds.get(w.word);
+      // Từ xuất hiện ở nhiều collocation → chỉ xử lý bài tập một lần
+      if (!wid || w.stub || doneWords.has(w.word)) continue;
+      doneWords.add(w.word);
+      const wordExErr = await replaceExercises(db, "word_id", wid, w.exercises);
+      if (wordExErr) {
+        return NextResponse.json(
+          { error: `Ghi exercises của từ "${w.word}" thất bại: ${wordExErr}` },
           { status: 500 }
         );
       }
     }
   }
 
-  // 3. Collocations
-  let collocationIds = new Map<string, string>();
-  if (allCollocations.length > 0) {
-    const { data, error } = await db
-      .from("collocations")
-      .upsert(
-        allCollocations.map((c) => ({
-          chunk: c.chunk,
-          literal_meaning: c.literal_meaning,
-          category_slug: c.category_slug,
-          note_vi: c.note_vi,
-          examples: c.examples,
-          status: c.status,
-        })),
-        { onConflict: "chunk" }
-      )
-      .select("id, chunk");
-    if (error) {
-      return NextResponse.json({ error: `Ghi collocations thất bại: ${error.message}` }, { status: 500 });
-    }
-    collocationIds = new Map((data ?? []).map((r) => [r.chunk as string, r.id as string]));
-  }
-
-  // 4. Liên kết nhiều-nhiều + variants + exercises của từng collocation
-  for (const w of items) {
-    const ownerId = wordIds.get(w.word);
-    for (const c of w.collocations) {
-      const cid = collocationIds.get(c.chunk);
-      if (!cid) continue;
-
-      const linkedWordIds = new Set<string>();
-      if (ownerId) linkedWordIds.add(ownerId);
-      for (const name of c.also_words) {
-        const id = wordIds.get(name);
-        if (id) linkedWordIds.add(id);
-      }
-      if (linkedWordIds.size > 0) {
-        const { error } = await db.from("word_collocations").upsert(
-          [...linkedWordIds].map((word_id) => ({ word_id, collocation_id: cid })),
-          { onConflict: "word_id,collocation_id", ignoreDuplicates: true }
-        );
-        if (error) {
-          return NextResponse.json(
-            { error: `Liên kết "${c.chunk}" thất bại: ${error.message}` },
-            { status: 500 }
-          );
-        }
-      }
-
-      // Thay thế toàn bộ variants + exercises (gửi lại nhiều lần vẫn ra cùng kết quả)
-      await db.from("collocation_variants").delete().eq("collocation_id", cid);
-      if (c.variants.length > 0) {
-        const { error } = await db
-          .from("collocation_variants")
-          .insert(c.variants.map((v) => ({ ...v, collocation_id: cid })));
-        if (error) {
-          return NextResponse.json(
-            { error: `Ghi variants của "${c.chunk}" thất bại: ${error.message}` },
-            { status: 500 }
-          );
-        }
-      }
-
-      await db.from("exercises").delete().eq("collocation_id", cid);
-      if (c.exercises.length > 0) {
-        const { error } = await db
-          .from("exercises")
-          .insert(c.exercises.map((e) => ({ ...e, collocation_id: cid })));
-        if (error) {
-          return NextResponse.json(
-            { error: `Ghi exercises của "${c.chunk}" thất bại: ${error.message}` },
-            { status: 500 }
-          );
-        }
-      }
-    }
-  }
-
   return NextResponse.json({
     ok: true,
-    words: items.length,
+    intents: items.length,
     collocations: allCollocations.length,
-    auto_created_words: autoCreated, // từ trong also_words được tạo nháp, cần bổ sung nghĩa
+    words: wordIds.size,
+    auto_created_words: autoCreated, // từ chỉ có tên, tạo nháp — cần bổ sung nghĩa
   });
 }

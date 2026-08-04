@@ -37,13 +37,18 @@ export interface Word {
 
 // ---- Collocation: đơn vị học Level 2 ----
 
-export const VARIANT_CONTEXTS = ["casual", "formal", "alternative"] as const;
-export type VariantContext = (typeof VARIANT_CONTEXTS)[number];
+/** Mức trang trọng của một cách nói. Chỉ 2 mức vì đó là 2 tình huống dùng thật. */
+export const REGISTERS = ["formal", "casual"] as const;
+export type Register = (typeof REGISTERS)[number];
 
-export const VARIANT_LABELS: Record<VariantContext, string> = {
-  casual: "Thân mật",
+export const REGISTER_LABELS: Record<Register, string> = {
   formal: "Trang trọng",
-  alternative: "Cách nói khác",
+  casual: "Thân mật",
+};
+
+export const REGISTER_HINTS: Record<Register, string> = {
+  formal: "Email, báo cáo, nói với khách hàng hoặc cấp trên",
+  casual: "Trò chuyện, nhắn tin Slack / Zalo / Viber hằng ngày",
 };
 
 /** Một lượt thoại trong hội thoại mẫu. */
@@ -52,13 +57,17 @@ export interface ConversationTurn {
   text: string;
 }
 
-export interface CollocationVariant {
+/**
+ * Ý định giao tiếp — điều người học muốn NÓI.
+ * Nhiều cách nói (collocation) khác register cùng phục vụ một intent.
+ */
+export interface Intent {
   id: string;
-  collocation_id: string;
-  context: VariantContext;
-  text_variant: string;
-  conversation: ConversationTurn[];
-  sort_order: number;
+  name_vi: string;
+  description_vi: string;
+  situation: string;
+  status: WordStatus;
+  created_at?: string;
 }
 
 export interface Collocation {
@@ -66,12 +75,15 @@ export interface Collocation {
   chunk: string;
   literal_meaning: string;
   category_slug: string | null;
+  intent_id: string | null;
+  register: Register;
   note_vi: string;
   examples: Example[];
+  conversation: ConversationTurn[];
   status: WordStatus;
   created_at?: string;
   // Tính phía client từ các bảng liên quan (xem lib/collocations.ts):
-  variants: CollocationVariant[];
+  intent: Intent | null;
   exercises: Exercise[];
   word_ids: string[]; // từ đơn cấu thành — dùng cho cơ chế mở khoá
   topic: string; // tên category — dùng cho section ở Home và badge
