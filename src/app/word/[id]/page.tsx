@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import TopBar from "@/components/TopBar";
 import WordDetail from "@/components/WordDetail";
@@ -11,8 +11,7 @@ import { useSession } from "@/lib/useSession";
 import { fetchWord } from "@/lib/words";
 import { collocationsForWord, fetchCollocations } from "@/lib/collocations";
 import { membershipForWord } from "@/lib/collections";
-import { isUnlocked } from "@/lib/progress";
-import type { Collocation, ProgressRow, Word } from "@/lib/types";
+import type { Collocation, Word } from "@/lib/types";
 
 export default function WordPage() {
   const { id } = useParams<{ id: string }>();
@@ -20,7 +19,6 @@ export default function WordPage() {
   const { userId } = useSession();
   const [word, setWord] = useState<Word | null>(null);
   const [collocations, setCollocations] = useState<Collocation[]>([]);
-  const [progress, setProgress] = useState<ProgressRow[]>([]);
   const [saved, setSaved] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
@@ -39,17 +37,7 @@ export default function WordPage() {
   useEffect(() => {
     if (!supabase || !userId || !id) return;
     membershipForWord(supabase, id).then((mem) => setSaved(mem.size > 0));
-    supabase
-      .from("progress")
-      .select("*")
-      .then(({ data }) => setProgress((data as ProgressRow[]) ?? []));
   }, [supabase, userId, id]);
-
-  const lockedIds = useMemo(
-    () =>
-      new Set(userId ? collocations.filter((c) => !isUnlocked(c, progress)).map((c) => c.id) : []),
-    [collocations, progress, userId]
-  );
 
   const openSheet = () => {
     if (!word) return;
@@ -70,7 +58,6 @@ export default function WordPage() {
           <WordDetail
             word={word}
             collocations={collocations}
-            lockedIds={lockedIds}
             saved={saved}
             onToggleSave={openSheet}
             onFeedback={() => {

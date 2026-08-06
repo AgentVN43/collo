@@ -28,14 +28,12 @@ export default function CollocationDetail({
   collocation,
   words = [],
   siblings = [],
-  locked = false,
 }: {
   collocation: Collocation;
   /** Các từ đơn cấu thành (để link ngược về /word/[id]). */
   words?: Word[];
   /** Cách nói khác cùng ý định — phần cốt lõi của mô hình Intent. */
   siblings?: Collocation[];
-  locked?: boolean;
 }) {
   const [translationOpen, setTranslationOpen] = useState(false);
 
@@ -58,11 +56,6 @@ export default function CollocationDetail({
           <span className="text-2xl font-bold text-gray-900">{collocation.chunk}</span>
           <SpeakButton text={collocation.chunk} />
           <RegisterBadge register={collocation.register} />
-          {locked && (
-            <span className="text-lg" aria-label="Chưa mở khoá" title="Học thuộc các từ đơn để mở khoá">
-              🔒
-            </span>
-          )}
         </div>
         <p className="mt-2 text-gray-800">{collocation.literal_meaning}</p>
         <p className="mt-1 text-xs text-gray-500">{REGISTER_HINTS[collocation.register]}</p>

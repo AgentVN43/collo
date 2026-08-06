@@ -1,10 +1,7 @@
-import type { Collocation, ProgressItemType, ProgressRow } from "./types";
+import type { ProgressItemType, ProgressRow } from "./types";
 
 /** Spacing ladder (days) indexed by mastery after the session. */
 const DUE_DAYS = [1, 1, 3, 7, 14, 14];
-
-/** Mastery tối thiểu của một TỪ ĐƠN để coi là "đã thuộc" → mở khoá collocation chứa nó. */
-export const LEARNED_THRESHOLD = 3;
 
 /** Mastery coi như thành thạo (chấm xanh ở Home, tab "Thành thạo" ở Progress). */
 export const SOLID_THRESHOLD = 4;
@@ -87,24 +84,13 @@ export function masteryDot(
 }
 
 /**
- * Collocation được mở khoá khi MỌI từ đơn cấu thành đã thuộc (mastery >= 3).
- * Collocation chưa liên kết từ đơn nào coi như mở sẵn (không có điều kiện để chặn).
- */
-export function isUnlocked(collocation: Collocation, rows: ProgressRow[]): boolean {
-  if (collocation.word_ids.length === 0) return true;
-  return collocation.word_ids.every((id) => masteryOf(rows, "word", id) >= LEARNED_THRESHOLD);
-}
-
-/**
  * Hàng đợi ưu tiên cho phiên luyện, dùng chung cho cả từ đơn lẫn collocation:
  * 1) quá hạn ôn, 2) fail-rate cao, 3) mục mới, 4) mastery thấp.
- * `boost` cộng thêm điểm ưu tiên cho từng mục (dùng để đẩy collocation đã mở khoá lên trước).
  */
 export function buildQueue<T extends { id: string }>(
   items: T[],
   rows: ProgressRow[],
-  itemType: ProgressItemType,
-  boost?: (item: T) => number
+  itemType: ProgressItemType
 ): T[] {
   const today = new Date().toISOString().slice(0, 10);
   const byItem = new Map<string, ProgressRow>();
@@ -122,7 +108,7 @@ export function buildQueue<T extends { id: string }>(
     else if (failRate > 0.3) priority = 3000 + failRate * 100;
     else if (!row) priority = 1000;
     else priority = 500 - row.mastery;
-    return { item, priority: priority + (boost?.(item) ?? 0) };
+    return { item, priority };
   });
 
   return scored.sort((a, b) => b.priority - a.priority).map((s) => s.item);

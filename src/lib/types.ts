@@ -90,7 +90,7 @@ export interface Collocation {
   // Tính phía client từ các bảng liên quan (xem lib/collocations.ts):
   intent: Intent | null;
   exercises: Exercise[];
-  word_ids: string[]; // từ đơn cấu thành — dùng cho cơ chế mở khoá
+  word_ids: string[]; // từ đơn cấu thành — dùng cho bước quét nhanh và lọc theo phạm vi
   topic: string; // tên category — dùng cho section ở Home và badge
   topicOrder: number;
 }

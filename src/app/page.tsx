@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import TopBar from "@/components/TopBar";
 import { getSupabase } from "@/lib/supabase";
 import { useSession } from "@/lib/useSession";
-import { isUnlocked, masteryDot } from "@/lib/progress";
+import { masteryDot } from "@/lib/progress";
 import { fetchWords } from "@/lib/words";
 import { fetchCollocations } from "@/lib/collocations";
 import { savedWordIds } from "@/lib/collections";
@@ -206,7 +206,6 @@ export default function HomePage() {
               <ul>
                 {list.map((c) => {
                   const dot = signedIn ? masteryDot(progress, "collocation", c.id) : "gray";
-                  const locked = signedIn && !isUnlocked(c, progress);
                   return (
                     <li key={c.id} className="border-b border-gray-100">
                       <Link
@@ -220,15 +219,6 @@ export default function HomePage() {
                               {c.chunk}
                             </span>
                             <RegisterBadge register={c.register} />
-                            {locked && (
-                              <span
-                                className="text-sm"
-                                aria-label="Chưa mở khoá"
-                                title="Học thuộc các từ đơn cấu thành để mở khoá"
-                              >
-                                🔒
-                              </span>
-                            )}
                           </span>
                           <p className="truncate text-sm text-gray-700">{c.literal_meaning}</p>
                           {c.intent && (

@@ -5,58 +5,37 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import TopBar from "@/components/TopBar";
 import BottomSheet from "@/components/BottomSheet";
-import WordDetail from "@/components/WordDetail";
-import CollocationDetail from "@/components/CollocationDetail";
-import FeedbackSheet from "@/components/FeedbackSheet";
+import CollocationDetail, { RegisterBadge } from "@/components/CollocationDetail";
+import TileOrder from "@/components/TileOrder";
+import SpeakButton from "@/components/SpeakButton";
 import { getSupabase } from "@/lib/supabase";
 import { fetchWords } from "@/lib/words";
 import { fetchCollocations } from "@/lib/collocations";
 import { useSession } from "@/lib/useSession";
-import { grade, type GradeResult } from "@/lib/grading";
-import { applySession, buildQueue, emptyRow, isUnlocked, type SessionResult } from "@/lib/progress";
+import { gradeChunk, type GradeResult } from "@/lib/grading";
+import { applySession, buildQueue, emptyRow, type SessionResult } from "@/lib/progress";
 import { getEnabledCategories, getPracticeSettings, type PracticeSettings } from "@/lib/settings";
 import { collectionWordIds, fetchCollections, type CollectionWithCount } from "@/lib/collections";
-import type { Collocation, Exercise, ProgressItemType, ProgressRow, Word } from "@/lib/types";
-import { SUPPORTED_EXERCISE_TYPES } from "@/lib/types";
+import {
+  buildItem,
+  shuffle,
+  STAGE_LABEL,
+  type SessionItem,
+  type Stage,
+} from "@/lib/practiceItem";
+import { REGISTER_LABELS, type Collocation, type ProgressRow, type Word } from "@/lib/types";
 
 type Phase = "menu" | "pick" | "run" | "summary";
-type Level = 1 | 2;
+
 type Scope =
   | { type: "all" }
   | { type: "word"; id: string }
   | { type: "collocation"; id: string }
   | { type: "collection"; id: string };
 
-/** Bài tập đã chuẩn hoá để chạy — từ DB hoặc sinh tự động. */
-interface RunnableExercise {
-  key: string;
-  type: "fill_in" | "multiple_choice";
-  prompt: string;
-  before: string;
-  after: string;
-  answer: string;
-  alt: string[];
-  explain_vi: string;
-  pattern: string;
-  options: string[];
-}
-
-/** Một mục trong phiên luyện — từ đơn (Level 1) hoặc collocation (Level 2). */
-interface SessionItem {
-  id: string;
-  itemType: ProgressItemType;
-  title: string;
-  subtitle: string;
-  exercises: RunnableExercise[];
-  word?: Word;
-  collocation?: Collocation;
-}
-
 interface ItemLog {
   title: string;
-  correct: number;
-  near: number;
-  wrong: number;
+  score: number; // 0 … 1
 }
 
 const RESULT_STYLE: Record<GradeResult, string> = {
@@ -65,80 +44,10 @@ const RESULT_STYLE: Record<GradeResult, string> = {
   wrong: "border-red-500 bg-red-50",
 };
 
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-const pct = (t: { correct: number; near: number; wrong: number }) => {
-  const total = t.correct + t.near + t.wrong;
-  return total === 0 ? 0 : Math.round(((t.correct + t.near * 0.5) / total) * 100);
+const pct = (r: SessionResult) => {
+  const total = r.correct + r.near + r.wrong;
+  return total === 0 ? 0 : (r.correct + r.near * 0.5) / total;
 };
-
-/** Đổi Exercise trong DB thành dạng chạy được; bỏ qua dạng chưa có UI chấm điểm. */
-function toRunnable(ex: Exercise): RunnableExercise | null {
-  if (!SUPPORTED_EXERCISE_TYPES.includes(ex.type)) return null;
-  return {
-    key: ex.id,
-    type: ex.type as "fill_in" | "multiple_choice",
-    prompt: ex.prompt,
-    before: typeof ex.payload?.before === "string" ? ex.payload.before : "",
-    after: typeof ex.payload?.after === "string" ? ex.payload.after : "",
-    answer: ex.answer,
-    alt: ex.alt ?? [],
-    explain_vi: ex.explain_vi,
-    pattern: ex.pattern,
-    options: Array.isArray(ex.payload?.options) ? (ex.payload.options as string[]) : [],
-  };
-}
-
-/** Không có bài soạn sẵn → sinh bài mặc định "cho nghĩa tiếng Việt, gõ tiếng Anh". */
-function fallbackExercise(id: string, prompt: string, answer: string, explain: string): RunnableExercise {
-  return {
-    key: `auto-${id}`,
-    type: "fill_in",
-    prompt,
-    before: "",
-    after: "",
-    answer,
-    alt: [],
-    explain_vi: explain,
-    pattern: "",
-    options: [],
-  };
-}
-
-function buildWordItem(w: Word, exercises: Exercise[]): SessionItem {
-  const own = exercises.filter((e) => e.word_id === w.id).map(toRunnable).filter(Boolean) as RunnableExercise[];
-  return {
-    id: w.id,
-    itemType: "word",
-    title: w.word,
-    subtitle: w.meaning_vi,
-    word: w,
-    exercises:
-      own.length > 0 ? own : [fallbackExercise(w.id, w.meaning_vi, w.word, w.meaning_en)],
-  };
-}
-
-function buildCollocationItem(c: Collocation): SessionItem {
-  const own = c.exercises.map(toRunnable).filter(Boolean) as RunnableExercise[];
-  return {
-    id: c.id,
-    itemType: "collocation",
-    title: c.chunk,
-    subtitle: c.literal_meaning,
-    collocation: c,
-    exercises:
-      own.length > 0
-        ? own
-        : [fallbackExercise(c.id, c.literal_meaning, c.chunk, c.note_vi)],
-  };
-}
 
 function PracticeSession() {
   const params = useSearchParams();
@@ -151,7 +60,6 @@ function PracticeSession() {
   // Dữ liệu nền
   const [words, setWords] = useState<Word[]>([]);
   const [collocations, setCollocations] = useState<Collocation[]>([]);
-  const [wordExercises, setWordExercises] = useState<Exercise[]>([]);
   const [rows, setRows] = useState<ProgressRow[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [enabledCategories, setEnabledCategoriesState] = useState<string[] | null>(null);
@@ -159,9 +67,7 @@ function PracticeSession() {
 
   // Phiên luyện
   const [phase, setPhase] = useState<Phase>("menu");
-  const [sessionLevel, setSessionLevel] = useState<Level>(1);
   const [scope, setScope] = useState<Scope>({ type: "all" });
-  const [pendingLevel, setPendingLevel] = useState<Level>(1);
   const [items, setItems] = useState<SessionItem[]>([]);
   const [idx, setIdx] = useState(0);
   const [log, setLog] = useState<ItemLog[]>([]);
@@ -169,12 +75,14 @@ function PracticeSession() {
   const [collections, setCollections] = useState<CollectionWithCount[] | null>(null);
 
   // Mục đang luyện
-  const [exIndex, setExIndex] = useState(0);
+  const [stages, setStages] = useState<Stage[]>([]);
+  const [stageIdx, setStageIdx] = useState(0);
+  const [placed, setPlaced] = useState<number[]>([]);
   const [input, setInput] = useState("");
   const [result, setResult] = useState<GradeResult | null>(null);
+  const [note, setNote] = useState<string | null>(null);
   const [tally, setTally] = useState<SessionResult>({ correct: 0, near: 0, wrong: 0 });
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const deepLinked = useRef(false);
 
@@ -196,17 +104,15 @@ function PracticeSession() {
       fetchWords(supabase),
       fetchCollocations(supabase),
       supabase.from("progress").select("*"),
-      supabase.from("exercises").select("*").not("word_id", "is", null),
-    ]).then(([w, c, p, ex]) => {
+    ]).then(([w, c, p]) => {
       setWords(w);
       setCollocations(c);
       setRows((p.data as ProgressRow[]) ?? []);
-      setWordExercises((ex.data as Exercise[]) ?? []);
       setLoaded(true);
     });
   }, [supabase, userId]);
 
-  // Deep link chỉ đặt PHẠM VI — người học vẫn tự chọn Level ở menu
+  // Deep link chỉ đặt PHẠM VI — chặng nào thì do mastery quyết định
   useEffect(() => {
     if (deepLinked.current) return;
     if (wordParam) {
@@ -230,10 +136,13 @@ function PracticeSession() {
     [collocations, enabledCategories]
   );
 
-  const resetItemState = () => {
-    setExIndex(0);
+  const openItem = (list: SessionItem[], at: number) => {
+    setStages(list[at].stages);
+    setStageIdx(0);
+    setPlaced([]);
     setInput("");
     setResult(null);
+    setNote(null);
     setTally({ correct: 0, near: 0, wrong: 0 });
   };
 
@@ -242,10 +151,10 @@ function PracticeSession() {
     async (item: SessionItem, allRows: ProgressRow[]) => {
       if (!supabase || !userId) return;
       const exists = allRows.some(
-        (r) => r.item_type === item.itemType && r.item_id === item.id
+        (r) => r.item_type === "collocation" && r.item_id === item.collocation.id
       );
       if (exists) return;
-      const row = emptyRow(userId, item.itemType, item.id);
+      const row = emptyRow(userId, "collocation", item.collocation.id);
       setRows((prev) => [...prev, row]);
       await supabase
         .from("progress")
@@ -255,22 +164,19 @@ function PracticeSession() {
   );
 
   const beginSession = useCallback(
-    (list: SessionItem[], level: Level) => {
+    (list: SessionItem[]) => {
       if (list.length === 0) {
         setPoolError(
-          level === 2
-            ? "Không có collocation nào luyện được trong phạm vi này — kiểm tra Settings → Category to Practice."
-            : "Không có từ đơn nào luyện được trong phạm vi này."
+          "Không có collocation nào luyện được trong phạm vi này — kiểm tra Settings → Category to Practice."
         );
         setPhase("menu");
         return;
       }
       setPoolError(null);
-      setSessionLevel(level);
       setItems(list);
       setIdx(0);
       setLog([]);
-      resetItemState();
+      openItem(list, 0);
       setPhase("run");
       activate(list[0], rows);
     },
@@ -279,27 +185,20 @@ function PracticeSession() {
 
   /** Chọn N mục theo hàng đợi ưu tiên rồi xáo thứ tự hiển thị. */
   const buildPool = useCallback(
-    (level: Level, scopeWordIds?: Set<string>): SessionItem[] => {
+    (scopeWordIds?: Set<string>): SessionItem[] => {
       const n = settings?.quantity ?? 5;
-      if (level === 1) {
-        const pool = scopeWordIds ? words.filter((w) => scopeWordIds.has(w.id)) : words;
-        return shuffle(buildQueue(pool, rows, "word").slice(0, n)).map((w) =>
-          buildWordItem(w, wordExercises)
-        );
-      }
       let pool = practicableCollocations;
       if (scopeWordIds) {
         pool = pool.filter((c) => c.word_ids.some((id) => scopeWordIds.has(id)));
       }
-      // Collocation đã mở khoá được đẩy lên đầu hàng đợi (ưu tiên mềm, không khoá cứng)
-      const queued = buildQueue(pool, rows, "collocation", (c) => (isUnlocked(c, rows) ? 2000 : 0));
-      return shuffle(queued.slice(0, n)).map(buildCollocationItem);
+      const queued = buildQueue(pool, rows, "collocation");
+      return shuffle(queued.slice(0, n)).map((c) => buildItem(c, words, collocations, rows));
     },
-    [words, practicableCollocations, rows, wordExercises, settings]
+    [practicableCollocations, collocations, rows, words, settings]
   );
 
   const startCollection = useCallback(
-    async (collectionId: string, level: Level) => {
+    async (collectionId: string) => {
       if (!supabase) return;
       const ids = await collectionWordIds(supabase, collectionId);
       if (ids.size === 0) {
@@ -307,108 +206,136 @@ function PracticeSession() {
         setPhase("menu");
         return;
       }
-      beginSession(buildPool(level, ids), level);
+      beginSession(buildPool(ids));
     },
     [supabase, beginSession, buildPool]
   );
 
-  /** Người học bấm chọn dạng bài (Level) từ menu. */
-  const start = useCallback(
-    async (level: Level) => {
-      setPoolError(null);
-      if (scope.type === "word") {
-        const target = words.find((w) => w.id === scope.id);
-        if (!target) {
-          setPoolError("Không tìm thấy từ này.");
-          return;
-        }
-        // Phạm vi 1 từ: Level 1 luyện chính từ đó, Level 2 luyện các cụm chứa nó
-        if (level === 1) beginSession([buildWordItem(target, wordExercises)], 1);
-        else beginSession(buildPool(2, new Set([target.id])), 2);
+  const start = useCallback(async () => {
+    setPoolError(null);
+    // Phạm vi 1 từ: luyện các cụm CHỨA từ đó — bản thân từ đơn không còn là bài tập
+    if (scope.type === "word") {
+      const target = words.find((w) => w.id === scope.id);
+      if (!target) {
+        setPoolError("Không tìm thấy từ này.");
         return;
       }
-      if (scope.type === "collocation") {
-        const target = collocations.find((c) => c.id === scope.id);
-        if (!target) {
-          setPoolError("Không tìm thấy cụm từ này.");
-          return;
-        }
-        if (level === 2) beginSession([buildCollocationItem(target)], 2);
-        else {
-          // Level 1 trong phạm vi 1 cụm = luyện các từ đơn cấu thành
-          const parts = words.filter((w) => target.word_ids.includes(w.id));
-          beginSession(
-            parts.map((w) => buildWordItem(w, wordExercises)),
-            1
-          );
-        }
+      beginSession(buildPool(new Set([target.id])));
+      return;
+    }
+    if (scope.type === "collocation") {
+      const target = collocations.find((c) => c.id === scope.id);
+      if (!target) {
+        setPoolError("Không tìm thấy cụm từ này.");
         return;
       }
-      if (scope.type === "collection") {
-        startCollection(scope.id, level);
-        return;
-      }
-      if (settings?.mode === "collection") {
-        setPendingLevel(level);
-        setPhase("pick");
-        if (collections === null && supabase) setCollections(await fetchCollections(supabase));
-      } else {
-        beginSession(buildPool(level), level);
-      }
-    },
-    [
-      scope,
-      words,
-      collocations,
-      wordExercises,
-      settings,
-      collections,
-      supabase,
-      beginSession,
-      buildPool,
-      startCollection,
-    ]
-  );
+      beginSession([buildItem(target, words, collocations, rows)]);
+      return;
+    }
+    if (scope.type === "collection") {
+      startCollection(scope.id);
+      return;
+    }
+    if (settings?.mode === "collection") {
+      setPhase("pick");
+      if (collections === null && supabase) setCollections(await fetchCollections(supabase));
+    } else {
+      beginSession(buildPool());
+    }
+  }, [
+    scope,
+    words,
+    collocations,
+    rows,
+    settings,
+    collections,
+    supabase,
+    beginSession,
+    buildPool,
+    startCollection,
+  ]);
 
   const item = items[idx];
-  const exercise = item?.exercises[exIndex];
+  const stage = stages[stageIdx];
 
   const saveSession = async (target: SessionItem, res: SessionResult) => {
     if (!supabase || !userId) return;
     const existing =
-      rows.find((r) => r.item_type === target.itemType && r.item_id === target.id) ??
-      emptyRow(userId, target.itemType, target.id);
+      rows.find((r) => r.item_type === "collocation" && r.item_id === target.collocation.id) ??
+      emptyRow(userId, "collocation", target.collocation.id);
     const updated = applySession(existing, res);
     setRows((prev) => [
-      ...prev.filter((r) => !(r.item_type === target.itemType && r.item_id === target.id)),
+      ...prev.filter(
+        (r) => !(r.item_type === "collocation" && r.item_id === target.collocation.id)
+      ),
       updated,
     ]);
     await supabase.from("progress").upsert(updated, { onConflict: "user_id,item_type,item_id" });
   };
 
-  const check = (given?: string) => {
-    if (!exercise || result) return;
-    const answer = given ?? input;
-    if (exercise.type === "multiple_choice" && given !== undefined) setInput(given);
-    const r = grade(answer, exercise.answer, exercise.alt);
+  /** Chấm một câu gõ tay, có nhận ra trường hợp "đúng ý nhưng sai register". */
+  const evaluateTyped = (typed: string): { r: GradeResult; note: string | null } => {
+    if (!item) return { r: "wrong", note: null };
+    const r = gradeChunk(typed, item.collocation.chunk);
+    if (r !== "wrong") return { r, note: null };
+    const sib = item.siblings.find((s) => gradeChunk(typed, s.chunk) === "correct");
+    if (sib) {
+      return {
+        r: "near",
+        note: `Đúng ý rồi — nhưng đó là cách nói ${REGISTER_LABELS[
+          sib.register
+        ].toLowerCase()}, bài đang hỏi bản ${REGISTER_LABELS[
+          item.collocation.register
+        ].toLowerCase()}.`,
+      };
+    }
+    return { r, note: null };
+  };
+
+  const record = (r: GradeResult, why: string | null = null) => {
     setResult(r);
+    setNote(why);
     const key = r === "correct" ? "correct" : r === "near" ? "near" : "wrong";
     setTally((t) => ({ ...t, [key]: t[key] + 1 }));
   };
 
-  const next = async () => {
-    if (!item) return;
-    if (exIndex + 1 < item.exercises.length) {
-      setExIndex(exIndex + 1);
-      setInput("");
-      setResult(null);
+  const check = () => {
+    if (!item || result) return;
+    if (stage === "unscramble") {
+      const given = placed.map((i) => item.tiles[i]).join(" ");
+      record(gradeChunk(given, item.collocation.chunk));
       return;
     }
+    const { r, note: why } = evaluateTyped(input);
+    record(r, why);
+  };
+
+  /** Nhớ không ra → chèn "xếp hình" làm giàn giáo ngay sau chặng đang dở. */
+  const needScaffold =
+    result === "wrong" && stage !== "unscramble" && !stages.includes("unscramble");
+
+  const next = async () => {
+    if (!item || !result) return;
+
+    const plan: Stage[] = needScaffold
+      ? [...stages.slice(0, stageIdx + 1), "unscramble", ...stages.slice(stageIdx + 1)]
+      : stages;
+    if (needScaffold) setStages(plan);
+
+    if (stageIdx + 1 < plan.length) {
+      setStageIdx(stageIdx + 1);
+      setPlaced([]);
+      setInput("");
+      setResult(null);
+      setNote(null);
+      return;
+    }
+
     await saveSession(item, tally);
-    setLog((prev) => [...prev, { title: item.title, ...tally }]);
+    setLog((prev) => [...prev, { title: item.collocation.chunk, score: pct(tally) }]);
     if (idx + 1 < items.length) {
       setIdx(idx + 1);
-      resetItemState();
+      openItem(items, idx + 1);
       activate(items[idx + 1], rows);
     } else {
       setPhase("summary");
@@ -470,7 +397,7 @@ function PracticeSession() {
           <h2 className="text-lg font-bold text-gray-900">✍️ Luyện tập</h2>
           <p className="mt-1 text-sm text-gray-500">
             {scope.type === "all"
-              ? `Phiên ${settings.quantity} mục · ${
+              ? `Phiên ${settings.quantity} cụm · ${
                   settings.mode === "free" ? "random toàn kho theo lịch ôn" : "theo bộ sưu tập"
                 }`
               : "Luyện trong phạm vi đang chọn"}
@@ -480,23 +407,15 @@ function PracticeSession() {
               Hãy nhớ tạo list học tập trước khi luyện tập nhé 📚
             </p>
           )}
-          <div className="mt-3 grid grid-cols-1 gap-2">
-            <button
-              onClick={() => start(1)}
-              className="w-full rounded-xl bg-blue-600 py-3 font-semibold text-white active:bg-blue-700"
-            >
-              Level 1 — Từ đơn
-            </button>
-            <button
-              onClick={() => start(2)}
-              className="w-full rounded-xl border-2 border-blue-600 py-3 font-semibold text-blue-700 active:bg-blue-50"
-            >
-              Level 2 — Collocation
-            </button>
-          </div>
+          <button
+            onClick={start}
+            className="mt-3 w-full rounded-xl bg-blue-600 py-3 font-semibold text-white active:bg-blue-700"
+          >
+            Bắt đầu
+          </button>
           <p className="mt-3 text-xs text-gray-400">
-            Học thuộc từ đơn ở Level 1 (mastery ≥ 3) để các collocation ghép từ chúng được ưu tiên ở
-            Level 2.
+            Cụm mới thì quét nhanh rồi xếp hình; cụm đã quen thì phải tự nhớ ra. Càng thuộc, bài
+            càng khó.
           </p>
         </div>
 
@@ -514,7 +433,7 @@ function PracticeSession() {
   if (phase === "pick") {
     return (
       <div className="px-4 py-4 space-y-2">
-        <h2 className="font-semibold text-gray-900">Chọn bộ sưu tập · Level {pendingLevel}</h2>
+        <h2 className="font-semibold text-gray-900">Chọn bộ sưu tập</h2>
         {collections === null ? (
           <p className="py-6 text-center text-gray-400">Đang tải…</p>
         ) : collections.length === 0 ? (
@@ -533,7 +452,7 @@ function PracticeSession() {
           collections.map((c) => (
             <button
               key={c.id}
-              onClick={() => startCollection(c.id, pendingLevel)}
+              onClick={() => startCollection(c.id)}
               className="flex w-full items-center rounded-xl border border-gray-200 px-4 py-3 text-left"
             >
               <span className="mr-3 text-2xl">📚</span>
@@ -554,32 +473,30 @@ function PracticeSession() {
 
   // ---- Tổng kết phiên ----
   if (phase === "summary") {
-    const totals = log.reduce(
-      (s, l) => ({ correct: s.correct + l.correct, near: s.near + l.near, wrong: s.wrong + l.wrong }),
-      { correct: 0, near: 0, wrong: 0 }
-    );
-    const score = pct(totals);
+    const avg = log.length === 0 ? 0 : log.reduce((s, l) => s + l.score, 0) / log.length;
+    const score = Math.round(avg * 100);
     return (
       <div className="px-4 py-6 text-center space-y-4">
         <p className="text-5xl">{score >= 80 ? "🎉" : score >= 50 ? "💪" : "📖"}</p>
         <p className="text-xl font-bold">
-          Level {sessionLevel} · {log.length} mục — {score}%
-        </p>
-        <p className="text-sm text-gray-500">
-          ✅ {totals.correct} đúng · 🟡 {totals.near} gần đúng · ❌ {totals.wrong} sai
+          {log.length} cụm — {score}%
         </p>
         <ul className="space-y-1.5 text-left">
           {[...log]
-            .sort((a, b) => pct(a) - pct(b))
+            .sort((a, b) => a.score - b.score)
             .map((l, i) => (
               <li key={i} className="flex items-center rounded-xl border border-gray-100 px-3 py-2">
                 <span className="flex-1 font-semibold text-gray-900">{l.title}</span>
                 <span
                   className={`text-sm font-semibold ${
-                    pct(l) >= 80 ? "text-green-600" : pct(l) >= 50 ? "text-yellow-600" : "text-red-500"
+                    l.score >= 0.8
+                      ? "text-green-600"
+                      : l.score >= 0.5
+                        ? "text-yellow-600"
+                        : "text-red-500"
                   }`}
                 >
-                  {pct(l)}%
+                  {Math.round(l.score * 100)}%
                 </span>
               </li>
             ))}
@@ -605,161 +522,235 @@ function PracticeSession() {
     );
   }
 
-  if (!item || !exercise)
+  if (!item || !stage)
     return <p className="p-6 text-center text-gray-400">Đang chuẩn bị bài luyện…</p>;
 
-  const isLastItem = idx + 1 >= items.length;
-  const isLastExercise = exIndex + 1 >= item.exercises.length;
+  const header = (
+    <div className="pt-4 pb-2 text-center">
+      <p className="text-xs font-semibold text-gray-400">
+        Cụm {idx + 1}/{items.length} · {STAGE_LABEL[stage]}
+      </p>
+    </div>
+  );
 
-  return (
-    <div className="px-4 pb-8">
-      {/* Mục đang luyện + tiến độ phiên */}
-      <div className="pt-4 pb-2 text-center">
-        <p className="text-xs font-semibold text-gray-400">
-          Level {sessionLevel} · Mục {idx + 1}/{items.length}
-        </p>
-        <p className="mt-1 text-2xl font-bold text-gray-900">
-          {result ? item.title : "• • •"}
-        </p>
-        <p className="text-sm text-gray-500">{item.subtitle}</p>
-        <div className="mt-3 flex items-center justify-center gap-2">
-          <span className="rounded-full bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white">
-            {item.itemType === "word" ? "Từ đơn" : "Collocation"}
-          </span>
-          <button
-            onClick={() => setSheetOpen(true)}
-            aria-label="Ôn lý thuyết"
-            className="rounded-full bg-gray-100 px-3 py-1.5 text-sm"
-          >
-            📖 Lý thuyết
-          </button>
-          {item.word && (
-            <button
-              onClick={() => setFeedbackOpen(true)}
-              aria-label="Góp ý"
-              className="rounded-full bg-gray-100 px-3 py-1.5 text-sm"
-            >
-              💬 Góp ý
-            </button>
+  // ---- Quét nhanh: chỉ nhận mặt chữ, KHÔNG chấm điểm, không lộ chunk ----
+  if (stage === "scan") {
+    return (
+      <div className="px-4 pb-8">
+        {header}
+        <div className="mt-1 rounded-2xl border border-gray-200 p-4">
+          <p className="text-xs text-gray-400">Lướt qua cho quen mặt chữ thôi — không cần thuộc.</p>
+          {item.scanWords.length === 0 ? (
+            <p className="mt-3 rounded-xl bg-gray-50 px-3 py-3 text-sm text-gray-500">
+              Cụm này chưa liên kết từ đơn nào.
+            </p>
+          ) : (
+            <ul className="mt-3 space-y-2">
+              {item.scanWords.map((w) => (
+                <li key={w.id} className="rounded-xl border border-gray-100 px-3 py-2">
+                  <p className="flex items-baseline gap-2">
+                    <span className="text-lg font-bold text-gray-900">{w.word}</span>
+                    <SpeakButton text={w.word} className="text-base" />
+                    <span className="text-sm italic text-gray-500">{w.word_type}</span>
+                  </p>
+                  <p className="text-sm text-gray-700">{w.meaning_vi}</p>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
+        <button
+          onClick={() => setStageIdx(stageIdx + 1)}
+          className="mt-4 w-full rounded-2xl bg-blue-600 py-3.5 text-lg font-semibold text-white active:bg-blue-700"
+        >
+          Bắt đầu luyện →
+        </button>
       </div>
+    );
+  }
 
-      <div className="mt-3">
-        <p className="mb-1 text-xs font-semibold uppercase text-gray-400">
-          Câu {exIndex + 1}/{item.exercises.length}
+  const feedback = result && (
+    <div className="mt-3 space-y-3">
+      <div
+        className={`rounded-xl p-3 text-sm ${
+          result === "correct"
+            ? "bg-green-50 text-green-800"
+            : result === "near"
+              ? "bg-yellow-50 text-yellow-800"
+              : "bg-red-50 text-red-800"
+        }`}
+      >
+        {/* Nghe lại nguyên cụm sau khi đã trả lời — nhại theo là bước cuối của mỗi lần sản sinh */}
+        <p className="flex items-start gap-1.5 font-semibold">
+          <span className="flex-1">
+            {result === "correct"
+              ? `✅ Chính xác! ${item.collocation.chunk}`
+              : result === "near"
+                ? `🟡 Gần đúng. Đáp án: ${item.collocation.chunk}`
+                : `❌ Đáp án: ${item.collocation.chunk}`}
+          </span>
+          <SpeakButton text={item.collocation.chunk} className="shrink-0 text-base" />
         </p>
+        {note && <p className="mt-1">{note}</p>}
+        {item.collocation.note_vi && <p className="mt-1">{item.collocation.note_vi}</p>}
+      </div>
+      <button
+        onClick={next}
+        className="w-full rounded-2xl bg-blue-600 py-3.5 text-lg font-semibold text-white"
+      >
+        {needScaffold
+          ? `Tiếp: ${STAGE_LABEL.unscramble}`
+          : stageIdx + 1 < stages.length
+            ? `Tiếp: ${STAGE_LABEL[stages[stageIdx + 1]]}`
+            : idx + 1 >= items.length
+              ? "Tổng kết phiên"
+              : "Cụm tiếp theo →"}
+      </button>
+    </div>
+  );
 
-        {/* Đề bài */}
-        {exercise.before || exercise.after ? (
-          <p className="mt-3 text-lg leading-relaxed text-gray-900">
-            {exercise.before}
-            <span className="inline-block min-w-24 border-b-2 border-blue-400 text-center font-semibold text-blue-700">
-              {result ? input || "—" : "______"}
-            </span>
-            {exercise.after}
-            {exercise.pattern && (
-              <span className="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
-                {exercise.pattern}
-              </span>
-            )}
+  // Chỉ mở "Lý thuyết" SAU khi đã trả lời — sheet hiện nguyên chunk ngay dòng đầu
+  const theoryButton = result && (
+    <button
+      onClick={() => setSheetOpen(true)}
+      aria-label="Ôn lý thuyết"
+      className="rounded-full bg-gray-100 px-3 py-1.5 text-sm"
+    >
+      📖 Lý thuyết
+    </button>
+  );
+
+  const sheet = (
+    <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)}>
+      <CollocationDetail collocation={item.collocation} />
+    </BottomSheet>
+  );
+
+  // ---- Xếp hình ----
+  if (stage === "unscramble") {
+    return (
+      <div className="px-4 pb-8">
+        {header}
+        <div className="text-center">
+          <p className="text-2xl font-bold text-gray-900">
+            {result ? item.collocation.chunk : "• • •"}
           </p>
-        ) : null}
-        {exercise.prompt && (
-          <p className="mt-2 rounded-xl bg-gray-50 px-3 py-2.5 text-gray-800">{exercise.prompt}</p>
-        )}
-
-        {/* Trả lời */}
-        {exercise.type === "multiple_choice" ? (
-          <div className="mt-4 space-y-2">
-            {exercise.options.map((opt) => {
-              const chosen = input === opt;
-              const isAnswer = opt === exercise.answer;
-              const style = !result
-                ? "border-gray-200 active:bg-blue-50"
-                : isAnswer
-                  ? "border-green-500 bg-green-50"
-                  : chosen
-                    ? "border-red-500 bg-red-50"
-                    : "border-gray-200 opacity-60";
-              return (
-                <button
-                  key={opt}
-                  onClick={() => check(opt)}
-                  disabled={!!result}
-                  className={`w-full rounded-xl border-2 px-4 py-3 text-left text-base ${style}`}
-                >
-                  {opt}
-                </button>
-              );
-            })}
+          <p className="text-sm text-gray-500">{item.collocation.literal_meaning}</p>
+          <div className="mt-3 flex items-center justify-center gap-2">
+            <RegisterBadge register={item.collocation.register} />
+            {theoryButton}
           </div>
-        ) : (
-          <input
-            value={input}
-            disabled={!!result}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && check()}
-            placeholder="Nhập câu trả lời…"
-            autoComplete="off"
-            autoCapitalize="none"
-            spellCheck={false}
-            className={`mt-4 w-full rounded-xl border-2 px-4 py-3 text-lg outline-none ${
-              result ? RESULT_STYLE[result] : "border-gray-200 focus:border-blue-500"
-            }`}
-          />
-        )}
+        </div>
 
-        {!result && exercise.type === "fill_in" && (
+        <p className="mt-3 rounded-xl bg-gray-50 px-3 py-2.5 text-gray-800">
+          Ghép các thẻ thành cụm tiếng Anh đúng thứ tự.
+        </p>
+        <TileOrder tiles={item.tiles} value={placed} onChange={setPlaced} disabled={!!result} />
+
+        {!result && (
           <button
-            onClick={() => check()}
-            className="mt-2 w-full rounded-2xl bg-blue-600 py-3.5 text-lg font-semibold text-white"
+            onClick={check}
+            disabled={placed.length === 0}
+            className="mt-4 w-full rounded-2xl bg-blue-600 py-3.5 text-lg font-semibold text-white disabled:bg-gray-300"
           >
             Kiểm tra
           </button>
         )}
+        {feedback}
+        {sheet}
+      </div>
+    );
+  }
 
-        {result && (
-          <div className="mt-3 space-y-3">
-            <div
-              className={`rounded-xl p-3 text-sm ${
-                result === "correct"
-                  ? "bg-green-50 text-green-800"
-                  : result === "near"
-                    ? "bg-yellow-50 text-yellow-800"
-                    : "bg-red-50 text-red-800"
-              }`}
-            >
-              <p className="font-semibold">
-                {result === "correct"
-                  ? "✅ Chính xác!"
-                  : result === "near"
-                    ? `🟡 Gần đúng — chỉ lệch chút ít. Đáp án: ${exercise.answer}`
-                    : `❌ Đáp án: ${exercise.answer}`}
-              </p>
-              {exercise.explain_vi && <p className="mt-1">{exercise.explain_vi}</p>}
+  // ---- Vắt óc nhớ / Thực chiến: cùng một thao tác, khác gợi ý ----
+  const typingBox = (
+    <>
+      <input
+        value={input}
+        disabled={!!result}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && check()}
+        placeholder="Gõ cụm tiếng Anh…"
+        autoComplete="off"
+        autoCapitalize="none"
+        spellCheck={false}
+        className={`mt-4 w-full rounded-xl border-2 px-4 py-3 text-lg outline-none ${
+          result ? RESULT_STYLE[result] : "border-gray-200 focus:border-blue-500"
+        }`}
+      />
+      {!result && (
+        <div className="mt-2 flex gap-2">
+          <button
+            onClick={() => record("wrong")}
+            className="rounded-2xl border border-gray-300 px-4 py-3.5 font-semibold text-gray-600"
+          >
+            Chịu
+          </button>
+          <button
+            onClick={check}
+            disabled={!input.trim()}
+            className="flex-1 rounded-2xl bg-blue-600 py-3.5 text-lg font-semibold text-white disabled:bg-gray-300"
+          >
+            Kiểm tra
+          </button>
+        </div>
+      )}
+    </>
+  );
+
+  if (stage === "scenario" && item.scenario) {
+    return (
+      <div className="px-4 pb-8">
+        {header}
+        <div className="space-y-2">
+          {item.scenario.context.map((t, i) => (
+            <div key={i} className="rounded-xl border border-gray-200 px-3 py-2.5">
+              <p className="text-xs font-semibold uppercase text-gray-400">{t.speaker}</p>
+              <p className="text-gray-900">{t.text}</p>
+              {t.translate && <p className="mt-0.5 text-sm text-gray-500">{t.translate}</p>}
             </div>
-            <button
-              onClick={next}
-              className="w-full rounded-2xl bg-blue-600 py-3.5 text-lg font-semibold text-white"
-            >
-              {!isLastExercise ? "Câu tiếp theo" : isLastItem ? "Tổng kết phiên" : "Mục tiếp theo →"}
-            </button>
-          </div>
+          ))}
+        </div>
+        <div className="mt-3 rounded-xl bg-blue-50 px-3 py-2.5">
+          <p className="text-sm text-blue-900">
+            Bạn là <b>{item.scenario.speaker}</b>. Đáp lại bằng cách nói{" "}
+            <b>{REGISTER_LABELS[item.collocation.register].toLowerCase()}</b> mang nghĩa:
+          </p>
+          <p className="mt-0.5 font-semibold text-blue-900">{item.collocation.literal_meaning}</p>
+        </div>
+        {typingBox}
+        {result && <div className="mt-2 flex justify-center">{theoryButton}</div>}
+        {feedback}
+        {sheet}
+      </div>
+    );
+  }
+
+  // ---- Vắt óc nhớ ----
+  return (
+    <div className="px-4 pb-8">
+      {header}
+      <div className="text-center">
+        {item.collocation.intent && (
+          <p className="text-xs font-semibold uppercase text-purple-500">
+            🎯 {item.collocation.intent.name_vi}
+          </p>
         )}
+        <p className="mt-1 text-xl font-semibold text-gray-900">
+          {item.collocation.literal_meaning}
+        </p>
+        <div className="mt-3 flex items-center justify-center gap-2">
+          <RegisterBadge register={item.collocation.register} />
+          {theoryButton}
+        </div>
       </div>
 
-      <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)}>
-        {item.word && <WordDetail word={item.word} />}
-        {item.collocation && <CollocationDetail collocation={item.collocation} />}
-      </BottomSheet>
-      {userId && item.word && feedbackOpen && (
-        <FeedbackSheet
-          wordId={item.word.id}
-          userId={userId}
-          onClose={() => setFeedbackOpen(false)}
-        />
-      )}
+      <p className="mt-3 rounded-xl bg-gray-50 px-3 py-2.5 text-gray-800">
+        Không nhìn gợi ý — tự nhớ ra cụm tiếng Anh và gõ lại.
+      </p>
+      {typingBox}
+      {feedback}
+      {sheet}
     </div>
   );
 }

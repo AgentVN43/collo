@@ -1,0 +1,690 @@
+[
+  {
+    "intent": "khen phong cách ăn mặc của người khác",
+    "description_vi": "Khi muốn khen ai đó hôm nay mặc đẹp hoặc ăn mặc phù hợp hoàn cảnh.",
+    "situation": "Thời trang",
+    "status": "published",
+    "collocations": [
+      {
+        "chunk": "着装得体",
+        "register": "formal",
+        "category": "verb-adverb",
+        "literal_meaning": "ăn mặc chỉnh tề, đúng mực",
+        "note_vi": "Dùng nơi công sở, thư mời, nhận xét tác phong. Không dùng để khen bạn bè.",
+        "status": "published",
+        "examples": [
+          {
+            "en": "面试时着装得体非常重要。",
+            "vi": "Khi phỏng vấn, ăn mặc chỉnh tề là rất quan trọng.",
+            "pattern": "S+V+C"
+          },
+          {
+            "en": "他每次开会都着装得体。",
+            "vi": "Anh ấy lần nào họp cũng ăn mặc chỉnh tề.",
+            "pattern": "S+V"
+          }
+        ],
+        "conversation": [
+          {
+            "speaker": "面试官",
+            "text": "请问贵公司对着装有什么要求吗？",
+            "translate": "Xin hỏi công ty có yêu cầu gì về trang phục không ạ?"
+          },
+          {
+            "speaker": "人事经理",
+            "text": "我们希望员工上班时着装得体。",
+            "translate": "Chúng tôi mong nhân viên đi làm ăn mặc chỉnh tề."
+          },
+          {
+            "speaker": "面试官",
+            "text": "明白了，谢谢您的说明。",
+            "translate": "Tôi hiểu rồi, cảm ơn anh đã giải thích."
+          }
+        ],
+        "words": [
+          {
+            "word": "着装",
+            "word_type": "n.",
+            "meaning_vi": "trang phục, cách ăn mặc",
+            "meaning_en": "zhuózhuāng",
+            "basics_vi": "Danh từ trang trọng chỉ cách ăn mặc tổng thể, hay đi với 得体 / 整齐.",
+            "exercises": [
+              {
+                "type": "multiple_choice",
+                "prompt": "Chữ nào có nghĩa là \"trang phục, cách ăn mặc\" (zhuózhuāng)?",
+                "answer": "着装",
+                "alt": [],
+                "explain_vi": "着装 (zhuózhuāng) = trang phục, cách ăn mặc.",
+                "pattern": "",
+                "payload": {
+                  "options": [
+                    "着装",
+                    "装着",
+                    "着衣",
+                    "服装"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "word": "得体",
+            "word_type": "adj.",
+            "meaning_vi": "đúng mực, chỉnh tề",
+            "meaning_en": "détǐ",
+            "basics_vi": "Chỉ sự phù hợp với hoàn cảnh, không chỉ đẹp. Đi với 着装 / 举止 / 谈吐.",
+            "exercises": [
+              {
+                "type": "multiple_choice",
+                "prompt": "Chữ nào có nghĩa là \"đúng mực, chỉnh tề\" (détǐ)?",
+                "answer": "得体",
+                "alt": [],
+                "explain_vi": "得体 (détǐ) = đúng mực, chỉnh tề.",
+                "pattern": "",
+                "payload": {
+                  "options": [
+                    "得体",
+                    "体得",
+                    "得当",
+                    "身体"
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "exercises": [
+          {
+            "type": "fill_in",
+            "prompt": "",
+            "answer": "着装得体",
+            "alt": [],
+            "explain_vi": "Nhấn mạnh việc ăn mặc phù hợp hoàn cảnh phỏng vấn.",
+            "pattern": "",
+            "payload": {
+              "before": "面试的时候一定要 ",
+              "after": "，这样才显得专业。"
+            }
+          },
+          {
+            "type": "multiple_choice",
+            "prompt": "Cách nói nào đúng và tự nhiên nhất?",
+            "answer": "着装得体",
+            "alt": [],
+            "explain_vi": "Viết trong đánh giá tác phong nhân viên thì dùng cách nói trang trọng này.",
+            "pattern": "",
+            "payload": {
+              "options": [
+                "着装得体",
+                "穿衣好看",
+                "衣服得体",
+                "着装漂亮"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "chunk": "穿得真好看",
+        "register": "casual",
+        "category": "other",
+        "literal_meaning": "mặc đẹp thật đấy",
+        "note_vi": "Khen bạn bè, người thân. Nghe thân mật, không dùng với cấp trên.",
+        "status": "published",
+        "examples": [
+          {
+            "en": "你今天穿得真好看！",
+            "vi": "Hôm nay cậu mặc đẹp thật đấy!",
+            "pattern": "S+V+C"
+          }
+        ],
+        "conversation": [
+          {
+            "speaker": "小美",
+            "text": "我今天这条裙子怎么样？",
+            "translate": "Cái váy hôm nay của tớ thế nào?"
+          },
+          {
+            "speaker": "小林",
+            "text": "哇，你穿得真好看！",
+            "translate": "Ôi, cậu mặc đẹp thật đấy!"
+          }
+        ],
+        "words": [
+          {
+            "word": "穿",
+            "word_type": "v.",
+            "meaning_vi": "mặc, mang (quần áo, giày)",
+            "meaning_en": "chuān",
+            "basics_vi": "Động từ cơ bản. Khác 戴 (đeo mũ, kính, trang sức).",
+            "exercises": [
+              {
+                "type": "multiple_choice",
+                "prompt": "Chữ nào có nghĩa là \"mặc, mang (quần áo, giày)\" (chuān)?",
+                "answer": "穿",
+                "alt": [],
+                "explain_vi": "穿 (chuān) = mặc, mang (quần áo, giày).",
+                "pattern": "",
+                "payload": {
+                  "options": [
+                    "穿",
+                    "戴",
+                    "穿戴",
+                    "串"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "word": "好看",
+            "word_type": "adj.",
+            "meaning_vi": "đẹp, ưa nhìn",
+            "meaning_en": "hǎokàn",
+            "basics_vi": "Khẩu ngữ, dùng cho cả người lẫn đồ vật. Trang trọng hơn thì dùng 美观.",
+            "exercises": [
+              {
+                "type": "multiple_choice",
+                "prompt": "Chữ nào có nghĩa là \"đẹp, ưa nhìn\" (hǎokàn)?",
+                "answer": "好看",
+                "alt": [],
+                "explain_vi": "好看 (hǎokàn) = đẹp, ưa nhìn.",
+                "pattern": "",
+                "payload": {
+                  "options": [
+                    "好看",
+                    "看好",
+                    "好玩",
+                    "美好"
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "exercises": [
+          {
+            "type": "fill_in",
+            "prompt": "",
+            "answer": "穿得真好看",
+            "alt": [],
+            "explain_vi": "Khen bạn bè trong đời thường.",
+            "pattern": "",
+            "payload": {
+              "before": "哇，你今天",
+              "after": "！"
+            }
+          },
+          {
+            "type": "multiple_choice",
+            "prompt": "Cách nói nào đúng và tự nhiên nhất?",
+            "answer": "穿得真好看",
+            "alt": [],
+            "explain_vi": "Chỉ phương án đầu đúng ngữ pháp khẩu ngữ.",
+            "pattern": "",
+            "payload": {
+              "options": [
+                "穿得真好看",
+                "穿着得体真",
+                "着装真好看",
+                "穿真好看得"
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "intent": "nói về xu hướng thời trang",
+    "description_vi": "Khi bàn về mốt đang thịnh hành hoặc ai đó chạy theo xu hướng.",
+    "situation": "Thời trang",
+    "status": "published",
+    "collocations": [
+      {
+        "chunk": "引领时尚潮流",
+        "register": "formal",
+        "category": "verb-noun",
+        "literal_meaning": "dẫn đầu xu hướng thời trang",
+        "note_vi": "Dùng trên báo chí, bài giới thiệu thương hiệu. Mang sắc thái trang trọng, tích cực.",
+        "status": "published",
+        "examples": [
+          {
+            "en": "这个品牌一直引领时尚潮流。",
+            "vi": "Thương hiệu này luôn dẫn đầu xu hướng thời trang.",
+            "pattern": "S+V+O"
+          }
+        ],
+        "conversation": [
+          {
+            "speaker": "记者",
+            "text": "请问贵品牌今年的定位是什么？",
+            "translate": "Xin hỏi định vị của thương hiệu năm nay là gì?"
+          },
+          {
+            "speaker": "设计总监",
+            "text": "我们希望继续引领时尚潮流。",
+            "translate": "Chúng tôi mong tiếp tục dẫn đầu xu hướng thời trang."
+          }
+        ],
+        "words": [
+          {
+            "word": "引领",
+            "word_type": "v.",
+            "meaning_vi": "dẫn dắt, dẫn đầu",
+            "meaning_en": "yǐnlǐng",
+            "basics_vi": "Trang trọng, hay gặp trên báo chí: 引领潮流 / 引领风尚.",
+            "exercises": [
+              {
+                "type": "multiple_choice",
+                "prompt": "Chữ nào có nghĩa là \"dẫn dắt, dẫn đầu\" (yǐnlǐng)?",
+                "answer": "引领",
+                "alt": [],
+                "explain_vi": "引领 (yǐnlǐng) = dẫn dắt, dẫn đầu.",
+                "pattern": "",
+                "payload": {
+                  "options": [
+                    "引领",
+                    "领引",
+                    "带领",
+                    "引导"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "word": "潮流",
+            "word_type": "n.",
+            "meaning_vi": "trào lưu, xu hướng",
+            "meaning_en": "cháoliú",
+            "basics_vi": "Chỉ dòng chảy xu hướng xã hội. Đi với 引领 / 跟随 / 追赶.",
+            "exercises": [
+              {
+                "type": "multiple_choice",
+                "prompt": "Chữ nào có nghĩa là \"trào lưu, xu hướng\" (cháoliú)?",
+                "answer": "潮流",
+                "alt": [],
+                "explain_vi": "潮流 (cháoliú) = trào lưu, xu hướng.",
+                "pattern": "",
+                "payload": {
+                  "options": [
+                    "潮流",
+                    "流潮",
+                    "潮水",
+                    "流行"
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "exercises": [
+          {
+            "type": "fill_in",
+            "prompt": "",
+            "answer": "引领时尚潮流",
+            "alt": [],
+            "explain_vi": "Dùng trong bài giới thiệu thương hiệu.",
+            "pattern": "",
+            "payload": {
+              "before": "这个品牌多年来一直",
+              "after": "。"
+            }
+          },
+          {
+            "type": "multiple_choice",
+            "prompt": "Cách nói nào đúng và tự nhiên nhất?",
+            "answer": "引领时尚潮流",
+            "alt": [],
+            "explain_vi": "引领 là kết hợp cố định với 潮流; các động từ kia nghe không tự nhiên.",
+            "pattern": "",
+            "payload": {
+              "options": [
+                "引领时尚潮流",
+                "带领时尚潮流",
+                "领导时尚潮流",
+                "引导时尚潮流"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "chunk": "赶时髦",
+        "register": "casual",
+        "category": "verb-noun",
+        "literal_meaning": "chạy theo mốt",
+        "note_vi": "Khẩu ngữ, đôi khi mang ý trêu chọc nhẹ. Không dùng trong văn viết trang trọng.",
+        "status": "published",
+        "examples": [
+          {
+            "en": "他买这件衣服只是为了赶时髦。",
+            "vi": "Anh ấy mua cái áo này chỉ để chạy theo mốt thôi.",
+            "pattern": "S+V+O"
+          }
+        ],
+        "conversation": [
+          {
+            "speaker": "阿强",
+            "text": "你怎么也买了这种鞋？",
+            "translate": "Sao cậu cũng mua loại giày này thế?"
+          },
+          {
+            "speaker": "阿华",
+            "text": "我就是赶时髦嘛，大家都在穿。",
+            "translate": "Tớ chạy theo mốt thôi mà, ai cũng đang đi."
+          }
+        ],
+        "words": [
+          {
+            "word": "赶",
+            "word_type": "v.",
+            "meaning_vi": "đuổi theo, chạy theo",
+            "meaning_en": "gǎn",
+            "basics_vi": "Ngoài nghĩa đuổi theo còn có nghĩa gấp rút: 赶时间, 赶作业.",
+            "exercises": [
+              {
+                "type": "multiple_choice",
+                "prompt": "Chữ nào có nghĩa là \"đuổi theo, chạy theo\" (gǎn)?",
+                "answer": "赶",
+                "alt": [],
+                "explain_vi": "赶 (gǎn) = đuổi theo, chạy theo.",
+                "pattern": "",
+                "payload": {
+                  "options": [
+                    "赶",
+                    "干",
+                    "杆",
+                    "感"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "word": "时髦",
+            "word_type": "adj.",
+            "meaning_vi": "mốt, hợp thời",
+            "meaning_en": "shímáo",
+            "basics_vi": "Khẩu ngữ. 赶时髦 mang sắc thái trêu nhẹ hơn 时尚.",
+            "exercises": [
+              {
+                "type": "multiple_choice",
+                "prompt": "Chữ nào có nghĩa là \"mốt, hợp thời\" (shímáo)?",
+                "answer": "时髦",
+                "alt": [],
+                "explain_vi": "时髦 (shímáo) = mốt, hợp thời.",
+                "pattern": "",
+                "payload": {
+                  "options": [
+                    "时髦",
+                    "髦时",
+                    "时尚",
+                    "时候"
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "exercises": [
+          {
+            "type": "fill_in",
+            "prompt": "",
+            "answer": "赶时髦",
+            "alt": [],
+            "explain_vi": "Khẩu ngữ chỉ việc chạy theo mốt.",
+            "pattern": "",
+            "payload": {
+              "before": "他买那件衣服只是为了",
+              "after": "。"
+            }
+          },
+          {
+            "type": "multiple_choice",
+            "prompt": "Cách nói nào đúng và tự nhiên nhất?",
+            "answer": "赶时髦",
+            "alt": [],
+            "explain_vi": "赶时髦 là cụm cố định quen thuộc nhất trong khẩu ngữ.",
+            "pattern": "",
+            "payload": {
+              "options": [
+                "赶时髦",
+                "追时髦",
+                "跑时髦",
+                "赶时尚"
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "intent": "nhận xét chất liệu quần áo",
+    "description_vi": "Khi đánh giá vải vóc, chất liệu của một món đồ trước khi mua.",
+    "situation": "Thời trang",
+    "status": "published",
+    "collocations": [
+      {
+        "chunk": "优质面料",
+        "register": "formal",
+        "category": "adjective-noun",
+        "literal_meaning": "chất liệu cao cấp",
+        "note_vi": "Dùng trong mô tả sản phẩm, hợp đồng, tư vấn khách hàng.",
+        "status": "published",
+        "examples": [
+          {
+            "en": "这件大衣采用了优质面料。",
+            "vi": "Chiếc áo khoác này dùng chất liệu cao cấp.",
+            "pattern": "S+V+O"
+          }
+        ],
+        "conversation": [
+          {
+            "speaker": "客户",
+            "text": "这件外套为什么这么贵？",
+            "translate": "Sao cái áo khoác này đắt vậy?"
+          },
+          {
+            "speaker": "店员",
+            "text": "因为它使用的是优质面料，非常耐穿。",
+            "translate": "Vì nó dùng chất liệu cao cấp, rất bền."
+          }
+        ],
+        "words": [
+          {
+            "word": "优质",
+            "word_type": "adj.",
+            "meaning_vi": "chất lượng cao",
+            "meaning_en": "yōuzhì",
+            "basics_vi": "Từ trang trọng, hay dùng trong mô tả sản phẩm: 优质面料 / 优质服务.",
+            "exercises": [
+              {
+                "type": "multiple_choice",
+                "prompt": "Chữ nào có nghĩa là \"chất lượng cao\" (yōuzhì)?",
+                "answer": "优质",
+                "alt": [],
+                "explain_vi": "优质 (yōuzhì) = chất lượng cao.",
+                "pattern": "",
+                "payload": {
+                  "options": [
+                    "优质",
+                    "质优",
+                    "优秀",
+                    "品质"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "word": "面料",
+            "word_type": "n.",
+            "meaning_vi": "chất liệu vải",
+            "meaning_en": "miànliào",
+            "basics_vi": "Thuật ngữ ngành may mặc. Bản khẩu ngữ là 料子.",
+            "exercises": [
+              {
+                "type": "multiple_choice",
+                "prompt": "Chữ nào có nghĩa là \"chất liệu vải\" (miànliào)?",
+                "answer": "面料",
+                "alt": [],
+                "explain_vi": "面料 (miànliào) = chất liệu vải.",
+                "pattern": "",
+                "payload": {
+                  "options": [
+                    "面料",
+                    "料面",
+                    "面粉",
+                    "材料"
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "exercises": [
+          {
+            "type": "fill_in",
+            "prompt": "",
+            "answer": "优质面料",
+            "alt": [],
+            "explain_vi": "Mô tả sản phẩm cho khách hàng.",
+            "pattern": "",
+            "payload": {
+              "before": "这件大衣采用的是",
+              "after": "，所以价格偏高。"
+            }
+          },
+          {
+            "type": "multiple_choice",
+            "prompt": "Cách nói nào đúng và tự nhiên nhất?",
+            "answer": "优质面料",
+            "alt": [],
+            "explain_vi": "优质 đi với 面料 trong văn mô tả sản phẩm; 料子 là khẩu ngữ.",
+            "pattern": "",
+            "payload": {
+              "options": [
+                "优质面料",
+                "优秀面料",
+                "高质面料",
+                "优质料子"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "chunk": "料子很棒",
+        "register": "casual",
+        "category": "other",
+        "literal_meaning": "vải xịn lắm",
+        "note_vi": "Nói khi đi mua sắm cùng bạn bè. 料子 là cách gọi dân dã của 面料.",
+        "status": "published",
+        "examples": [
+          {
+            "en": "你摸摸看，这料子很棒。",
+            "vi": "Cậu sờ thử xem, vải này xịn lắm.",
+            "pattern": "S+V+C"
+          }
+        ],
+        "conversation": [
+          {
+            "speaker": "小雨",
+            "text": "这件衬衫值不值得买？",
+            "translate": "Cái áo sơ mi này có đáng mua không?"
+          },
+          {
+            "speaker": "小天",
+            "text": "买吧，料子很棒，摸起来很舒服。",
+            "translate": "Mua đi, vải xịn lắm, sờ vào rất thích."
+          }
+        ],
+        "words": [
+          {
+            "word": "料子",
+            "word_type": "n.",
+            "meaning_vi": "vải vóc (khẩu ngữ)",
+            "meaning_en": "liàozi",
+            "basics_vi": "Cách gọi dân dã của 面料, dùng khi trò chuyện đi mua sắm.",
+            "exercises": [
+              {
+                "type": "multiple_choice",
+                "prompt": "Chữ nào có nghĩa là \"vải vóc (khẩu ngữ)\" (liàozi)?",
+                "answer": "料子",
+                "alt": [],
+                "explain_vi": "料子 (liàozi) = vải vóc (khẩu ngữ).",
+                "pattern": "",
+                "payload": {
+                  "options": [
+                    "料子",
+                    "子料",
+                    "料理",
+                    "材子"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "word": "棒",
+            "word_type": "adj.",
+            "meaning_vi": "tuyệt, xịn",
+            "meaning_en": "bàng",
+            "basics_vi": "Khẩu ngữ khen ngợi mạnh. Không dùng trong văn viết trang trọng.",
+            "exercises": [
+              {
+                "type": "multiple_choice",
+                "prompt": "Chữ nào có nghĩa là \"tuyệt, xịn\" (bàng)?",
+                "answer": "棒",
+                "alt": [],
+                "explain_vi": "棒 (bàng) = tuyệt, xịn.",
+                "pattern": "",
+                "payload": {
+                  "options": [
+                    "棒",
+                    "傍",
+                    "帮",
+                    "邦"
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "exercises": [
+          {
+            "type": "fill_in",
+            "prompt": "",
+            "answer": "料子很棒",
+            "alt": [],
+            "explain_vi": "Khẩu ngữ khi đi mua sắm cùng bạn.",
+            "pattern": "",
+            "payload": {
+              "before": "你摸摸看，这",
+              "after": "，很值得买。"
+            }
+          },
+          {
+            "type": "multiple_choice",
+            "prompt": "Cách nói nào đúng và tự nhiên nhất?",
+            "answer": "料子很棒",
+            "alt": [],
+            "explain_vi": "Nói chuyện với bạn thì dùng 料子; 面料 nghe quá sách vở.",
+            "pattern": "",
+            "payload": {
+              "options": [
+                "料子很棒",
+                "面料很棒",
+                "料子很优质",
+                "布很棒子"
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

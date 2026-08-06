@@ -9,7 +9,6 @@ import { RegisterBadge } from "./CollocationDetail";
 export default function WordDetail({
   word,
   collocations = [],
-  lockedIds,
   saved,
   onToggleSave,
   onFeedback,
@@ -17,8 +16,6 @@ export default function WordDetail({
   word: Word;
   /** Các collocation có chứa từ này. */
   collocations?: Collocation[];
-  /** Id các collocation chưa mở khoá (hiện 🔒). Bỏ trống = không hiện trạng thái khoá. */
-  lockedIds?: Set<string>;
   saved?: boolean;
   onToggleSave?: () => void;
   onFeedback?: () => void;
@@ -74,38 +71,28 @@ export default function WordDetail({
         </p>
       ) : (
         <ul className="space-y-2">
-          {collocations.map((c) => {
-            const locked = lockedIds?.has(c.id) ?? false;
-            return (
-              <li key={c.id}>
-                <Link
-                  href={`/collocation/${c.id}`}
-                  className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3"
-                >
-                  <span className="flex-1 min-w-0">
-                    <span className="flex items-center gap-2">
-                      <span className="truncate font-semibold text-gray-900">{c.chunk}</span>
-                      <RegisterBadge register={c.register} />
-                      {locked && (
-                        <span aria-label="Chưa mở khoá" title="Học thuộc các từ đơn để mở khoá">
-                          🔒
-                        </span>
-                      )}
-                    </span>
-                    <span className="block truncate text-sm text-gray-600">
-                      {c.literal_meaning}
-                    </span>
-                    {c.intent && (
-                      <span className="block truncate text-xs text-purple-600">
-                        🎯 {c.intent.name_vi}
-                      </span>
-                    )}
+          {collocations.map((c) => (
+            <li key={c.id}>
+              <Link
+                href={`/collocation/${c.id}`}
+                className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3"
+              >
+                <span className="flex-1 min-w-0">
+                  <span className="flex items-center gap-2">
+                    <span className="truncate font-semibold text-gray-900">{c.chunk}</span>
+                    <RegisterBadge register={c.register} />
                   </span>
-                  <span className="text-gray-300">›</span>
-                </Link>
-              </li>
-            );
-          })}
+                  <span className="block truncate text-sm text-gray-600">{c.literal_meaning}</span>
+                  {c.intent && (
+                    <span className="block truncate text-xs text-purple-600">
+                      🎯 {c.intent.name_vi}
+                    </span>
+                  )}
+                </span>
+                <span className="text-gray-300">›</span>
+              </Link>
+            </li>
+          ))}
         </ul>
       )}
     </div>
