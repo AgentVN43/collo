@@ -21,6 +21,8 @@ export interface Scenario {
   context: ConversationTurn[];
   /** Tên người mà học viên sẽ đóng vai để đáp lại. */
   speaker: string;
+  /** Lượt thoại gốc chứa chunk — làm câu mẫu khi trả bài. */
+  model: string;
 }
 
 export interface SessionItem {
@@ -85,6 +87,7 @@ export function scenarioFor(c: Collocation): Scenario | null {
   return {
     context: turns.slice(Math.max(0, bestIdx - 3), bestIdx),
     speaker: turns[bestIdx].speaker,
+    model: turns[bestIdx].text,
   };
 }
 

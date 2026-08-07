@@ -78,3 +78,29 @@ export function gradeChunk(input: string, answer: string): GradeResult {
   if (given.join(" ") === expected.join(" ")) return "correct";
   return tokenDistance(given, expected) <= 1 ? "near" : "wrong";
 }
+
+/**
+ * Chấm một câu CHỨA cụm mục tiêu — dùng khi đề bài yêu cầu đáp lại thành câu
+ * ("I'm swamped with work right now" cho cụm "swamped with work").
+ *
+ * Nói được cụm trong một câu hoàn chỉnh không hề kém hơn nói cụm trần, nên các từ
+ * xung quanh không bị tính là lỗi. Chỉ đoạn khớp với cụm mới được chấm; cửa sổ nới
+ * ±1 từ để dung được biến thể ("I'm swamped with all this work").
+ */
+export function gradeContains(input: string, chunk: string): GradeResult {
+  const given = tokenize(input);
+  const target = tokenize(chunk);
+  if (given.length === 0 || target.length === 0) return "wrong";
+  // Câu ngắn hơn cụm thì không thể "chứa" — so thẳng
+  if (given.length <= target.length) return gradeChunk(input, chunk);
+
+  let best = Infinity;
+  for (let start = 0; start < given.length; start++) {
+    for (const len of [target.length - 1, target.length, target.length + 1]) {
+      if (len <= 0 || start + len > given.length) continue;
+      best = Math.min(best, tokenDistance(given.slice(start, start + len), target));
+      if (best === 0) return "correct";
+    }
+  }
+  return best <= 1 ? "near" : "wrong";
+}

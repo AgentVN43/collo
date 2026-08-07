@@ -12,7 +12,7 @@ import { getSupabase } from "@/lib/supabase";
 import { fetchWords } from "@/lib/words";
 import { fetchCollocations } from "@/lib/collocations";
 import { useSession } from "@/lib/useSession";
-import { gradeChunk, type GradeResult } from "@/lib/grading";
+import { gradeChunk, gradeContains, type GradeResult } from "@/lib/grading";
 import { applySession, buildQueue, emptyRow, type SessionResult } from "@/lib/progress";
 import { getEnabledCategories, getPracticeSettings, type PracticeSettings } from "@/lib/settings";
 import { collectionWordIds, fetchCollections, type CollectionWithCount } from "@/lib/collections";
@@ -273,12 +273,16 @@ function PracticeSession() {
     await supabase.from("progress").upsert(updated, { onConflict: "user_id,item_type,item_id" });
   };
 
-  /** Chấm một câu gõ tay, có nhận ra trường hợp "đúng ý nhưng sai register". */
+  /**
+   * Chấm một câu gõ tay. Dùng `gradeContains` chứ không `gradeChunk`: người học được
+   * phép nói thành câu ("I'm swamped with work right now"), các từ xung quanh cụm
+   * không phải là lỗi. Cũng nhận ra trường hợp "đúng ý nhưng sai register".
+   */
   const evaluateTyped = (typed: string): { r: GradeResult; note: string | null } => {
     if (!item) return { r: "wrong", note: null };
-    const r = gradeChunk(typed, item.collocation.chunk);
+    const r = gradeContains(typed, item.collocation.chunk);
     if (r !== "wrong") return { r, note: null };
-    const sib = item.siblings.find((s) => gradeChunk(typed, s.chunk) === "correct");
+    const sib = item.siblings.find((s) => gradeContains(typed, s.chunk) === "correct");
     if (sib) {
       return {
         r: "near",
@@ -591,8 +595,14 @@ function PracticeSession() {
           </span>
           <SpeakButton text={item.collocation.chunk} className="shrink-0 text-base" />
         </p>
-        {note && <p className="mt-1">{note}</p>}
-        {item.collocation.note_vi && <p className="mt-1">{item.collocation.note_vi}</p>}
+        {stage === "scenario" && item.scenario && (
+          <p className="mt-1 flex items-start gap-1.5 font-normal">
+            <span className="flex-1">Cách nói mẫu: “{item.scenario.model}”</span>
+            <SpeakButton text={item.scenario.model} className="shrink-0 text-base" />
+          </p>
+        )}
+        {note && <p className="mt-1 font-normal">{note}</p>}
+        {item.collocation.note_vi && <p className="mt-1 font-normal">{item.collocation.note_vi}</p>}
       </div>
       <button
         onClick={next}
@@ -670,7 +680,7 @@ function PracticeSession() {
         disabled={!!result}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && check()}
-        placeholder="Gõ cụm tiếng Anh…"
+        placeholder={stage === "scenario" ? "Gõ câu đáp lại…" : "Gõ cụm tiếng Anh…"}
         autoComplete="off"
         autoCapitalize="none"
         spellCheck={false}
@@ -717,6 +727,9 @@ function PracticeSession() {
             <b>{REGISTER_LABELS[item.collocation.register].toLowerCase()}</b> mang nghĩa:
           </p>
           <p className="mt-0.5 font-semibold text-blue-900">{item.collocation.literal_meaning}</p>
+          <p className="mt-1 text-xs text-blue-700">
+            Đáp thành câu hoàn chỉnh cũng được — chỉ cần có cụm trong đó.
+          </p>
         </div>
         {typingBox}
         {result && <div className="mt-2 flex justify-center">{theoryButton}</div>}
