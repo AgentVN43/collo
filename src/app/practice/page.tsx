@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import TopBar from "@/components/TopBar";
@@ -12,19 +12,24 @@ import { getSupabase } from "@/lib/supabase";
 import { fetchWords } from "@/lib/words";
 import { fetchCollocations } from "@/lib/collocations";
 import { useSession } from "@/lib/useSession";
-import { gradeChunk, gradeContains, type GradeResult } from "@/lib/grading";
-import { applySession, buildQueue, emptyRow, type SessionResult } from "@/lib/progress";
+import { type GradeResult } from "@/lib/grading";
+import { applySession, buildQueue, emptyRow, SOLID_THRESHOLD } from "@/lib/progress";
 import { getEnabledCategories, getPracticeSettings, type PracticeSettings } from "@/lib/settings";
 import { collectionWordIds, fetchCollections, type CollectionWithCount } from "@/lib/collections";
+import { buildItem, shuffle, STAGE_LABEL, type SessionItem } from "@/lib/practiceItem";
 import {
-  buildItem,
-  shuffle,
-  STAGE_LABEL,
-  type SessionItem,
-  type Stage,
-} from "@/lib/practiceItem";
+  currentItem,
+  currentStage,
+  emptySession,
+  hasNextStage,
+  isSessionEnd,
+  planAfter,
+  reduce,
+  willScaffold,
+} from "@/lib/practiceSession";
 import { REGISTER_LABELS, type Collocation, type ProgressRow, type Word } from "@/lib/types";
 
+/** Điều hướng màn hình. Luật của phiên nằm trong lib/practiceSession, không nằm ở đây. */
 type Phase = "menu" | "pick" | "run" | "summary";
 
 type Scope =
@@ -33,20 +38,10 @@ type Scope =
   | { type: "collocation"; id: string }
   | { type: "collection"; id: string };
 
-interface ItemLog {
-  title: string;
-  score: number; // 0 … 1
-}
-
 const RESULT_STYLE: Record<GradeResult, string> = {
   correct: "border-green-500 bg-green-50",
   near: "border-yellow-500 bg-yellow-50",
   wrong: "border-red-500 bg-red-50",
-};
-
-const pct = (r: SessionResult) => {
-  const total = r.correct + r.near + r.wrong;
-  return total === 0 ? 0 : (r.correct + r.near * 0.5) / total;
 };
 
 function PracticeSession() {
@@ -65,24 +60,19 @@ function PracticeSession() {
   const [enabledCategories, setEnabledCategoriesState] = useState<string[] | null>(null);
   const [settings, setSettings] = useState<PracticeSettings | null>(null);
 
-  // Phiên luyện
+  // Điều hướng
   const [phase, setPhase] = useState<Phase>("menu");
   const [scope, setScope] = useState<Scope>({ type: "all" });
-  const [items, setItems] = useState<SessionItem[]>([]);
-  const [idx, setIdx] = useState(0);
-  const [log, setLog] = useState<ItemLog[]>([]);
   const [poolError, setPoolError] = useState<string | null>(null);
   const [collections, setCollections] = useState<CollectionWithCount[] | null>(null);
-
-  // Mục đang luyện
-  const [stages, setStages] = useState<Stage[]>([]);
-  const [stageIdx, setStageIdx] = useState(0);
-  const [placed, setPlaced] = useState<number[]>([]);
-  const [input, setInput] = useState("");
-  const [result, setResult] = useState<GradeResult | null>(null);
-  const [note, setNote] = useState<string | null>(null);
-  const [tally, setTally] = useState<SessionResult>({ correct: 0, near: 0, wrong: 0 });
   const [sheetOpen, setSheetOpen] = useState(false);
+  /** Phạm vi từ đơn của phiên đang chạy — để "Luyện tiếp" dựng phiên mới cùng phạm vi. */
+  const [scopeIds, setScopeIds] = useState<Set<string> | null>(null);
+  /** Các cụm đã luyện xong trong lượt ngồi này (không reset giữa các phiên liên tiếp). */
+  const [practiced, setPracticed] = useState<Set<string>>(new Set());
+
+  // Toàn bộ trạng thái phiên gói trong MỘT đối tượng, mọi chuyển tiếp là hàm thuần
+  const [session, dispatch] = useReducer(reduce, undefined, emptySession);
 
   const deepLinked = useRef(false);
 
@@ -136,16 +126,6 @@ function PracticeSession() {
     [collocations, enabledCategories]
   );
 
-  const openItem = (list: SessionItem[], at: number) => {
-    setStages(list[at].stages);
-    setStageIdx(0);
-    setPlaced([]);
-    setInput("");
-    setResult(null);
-    setNote(null);
-    setTally({ correct: 0, near: 0, wrong: 0 });
-  };
-
   /** Kích hoạt dòng progress khi bắt đầu một mục (giữ cơ chế "activation row" như cũ). */
   const activate = useCallback(
     async (item: SessionItem, allRows: ProgressRow[]) => {
@@ -164,7 +144,7 @@ function PracticeSession() {
   );
 
   const beginSession = useCallback(
-    (list: SessionItem[]) => {
+    (list: SessionItem[], drill = false) => {
       if (list.length === 0) {
         setPoolError(
           "Không có collocation nào luyện được trong phạm vi này — kiểm tra Settings → Category to Practice."
@@ -173,24 +153,28 @@ function PracticeSession() {
         return;
       }
       setPoolError(null);
-      setItems(list);
-      setIdx(0);
-      setLog([]);
-      openItem(list, 0);
+      dispatch({ type: "begin", items: list, drill });
       setPhase("run");
       activate(list[0], rows);
     },
     [rows, activate]
   );
 
-  /** Chọn N mục theo hàng đợi ưu tiên rồi xáo thứ tự hiển thị. */
+  /**
+   * Chọn N mục theo hàng đợi ưu tiên rồi xáo thứ tự hiển thị.
+   *
+   * `exclude` loại các cụm vừa luyện xong trong lượt ngồi này. Cần thiết vì `buildQueue`
+   * đẩy cụm fail-rate cao lên ưu tiên 3000 — không lọc thì bấm "Luyện tiếp" sẽ gặp lại
+   * ngay đúng cụm vừa sai, mà nhớ lại sau 30 giây thì không chứng minh được điều gì.
+   */
   const buildPool = useCallback(
-    (scopeWordIds?: Set<string>): SessionItem[] => {
+    (scopeWordIds?: Set<string>, exclude?: Set<string>): SessionItem[] => {
       const n = settings?.quantity ?? 5;
       let pool = practicableCollocations;
       if (scopeWordIds) {
         pool = pool.filter((c) => c.word_ids.some((id) => scopeWordIds.has(id)));
       }
+      if (exclude) pool = pool.filter((c) => !exclude.has(c.id));
       const queued = buildQueue(pool, rows, "collocation");
       return shuffle(queued.slice(0, n)).map((c) => buildItem(c, words, collocations, rows));
     },
@@ -206,9 +190,10 @@ function PracticeSession() {
         setPhase("menu");
         return;
       }
-      beginSession(buildPool(ids));
+      setScopeIds(ids);
+      beginSession(buildPool(ids, practiced));
     },
-    [supabase, beginSession, buildPool]
+    [supabase, beginSession, buildPool, practiced]
   );
 
   const start = useCallback(async () => {
@@ -220,7 +205,9 @@ function PracticeSession() {
         setPoolError("Không tìm thấy từ này.");
         return;
       }
-      beginSession(buildPool(new Set([target.id])));
+      const ids = new Set([target.id]);
+      setScopeIds(ids);
+      beginSession(buildPool(ids, practiced));
       return;
     }
     if (scope.type === "collocation") {
@@ -229,7 +216,9 @@ function PracticeSession() {
         setPoolError("Không tìm thấy cụm từ này.");
         return;
       }
-      beginSession([buildItem(target, words, collocations, rows)]);
+      // Chọn đích danh một cụm = muốn luyện kỹ cụm ĐÓ, chạy hết thang trong một phiên
+      setScopeIds(null);
+      beginSession([buildItem(target, words, collocations, rows, true)], true);
       return;
     }
     if (scope.type === "collection") {
@@ -240,7 +229,8 @@ function PracticeSession() {
       setPhase("pick");
       if (collections === null && supabase) setCollections(await fetchCollections(supabase));
     } else {
-      beginSession(buildPool());
+      setScopeIds(null);
+      beginSession(buildPool(undefined, practiced));
     }
   }, [
     scope,
@@ -250,100 +240,64 @@ function PracticeSession() {
     settings,
     collections,
     supabase,
+    practiced,
     beginSession,
     buildPool,
     startCollection,
   ]);
 
-  const item = items[idx];
-  const stage = stages[stageIdx];
+  const item = currentItem(session);
+  const stage = currentStage(session);
 
-  const saveSession = async (target: SessionItem, res: SessionResult) => {
-    if (!supabase || !userId) return;
+  /** Lưu kết quả một mục, trả về bậc mastery trước và sau để tổng kết đối chiếu. */
+  const saveItem = async (target: SessionItem) => {
     const existing =
       rows.find((r) => r.item_type === "collocation" && r.item_id === target.collocation.id) ??
-      emptyRow(userId, "collocation", target.collocation.id);
-    const updated = applySession(existing, res);
+      emptyRow(userId ?? "", "collocation", target.collocation.id);
+    const updated = applySession(existing, session.tally);
     setRows((prev) => [
       ...prev.filter(
         (r) => !(r.item_type === "collocation" && r.item_id === target.collocation.id)
       ),
       updated,
     ]);
-    await supabase.from("progress").upsert(updated, { onConflict: "user_id,item_type,item_id" });
-  };
-
-  /**
-   * Chấm một câu gõ tay. Dùng `gradeContains` chứ không `gradeChunk`: người học được
-   * phép nói thành câu ("I'm swamped with work right now"), các từ xung quanh cụm
-   * không phải là lỗi. Cũng nhận ra trường hợp "đúng ý nhưng sai register".
-   */
-  const evaluateTyped = (typed: string): { r: GradeResult; note: string | null } => {
-    if (!item) return { r: "wrong", note: null };
-    const r = gradeContains(typed, item.collocation.chunk);
-    if (r !== "wrong") return { r, note: null };
-    const sib = item.siblings.find((s) => gradeContains(typed, s.chunk) === "correct");
-    if (sib) {
-      return {
-        r: "near",
-        note: `Đúng ý rồi — nhưng đó là cách nói ${REGISTER_LABELS[
-          sib.register
-        ].toLowerCase()}, bài đang hỏi bản ${REGISTER_LABELS[
-          item.collocation.register
-        ].toLowerCase()}.`,
-      };
+    setPracticed((prev) => new Set(prev).add(target.collocation.id));
+    if (supabase && userId) {
+      await supabase.from("progress").upsert(updated, { onConflict: "user_id,item_type,item_id" });
     }
-    return { r, note: null };
+    return { before: existing.mastery, after: updated.mastery };
   };
 
-  const record = (r: GradeResult, why: string | null = null) => {
-    setResult(r);
-    setNote(why);
-    const key = r === "correct" ? "correct" : r === "near" ? "near" : "wrong";
-    setTally((t) => ({ ...t, [key]: t[key] + 1 }));
+  /** Hết chặng của cụm này → chốt sổ rồi sang cụm kế. */
+  const goNextItem = async () => {
+    if (!item) return;
+    const { before, after } = await saveItem(item);
+    dispatch({ type: "nextItem", before, after });
+    const nextIdx = session.idx + 1;
+    if (nextIdx < session.items.length) activate(session.items[nextIdx], rows);
+    else setPhase("summary");
   };
 
-  const check = () => {
-    if (!item || result) return;
-    if (stage === "unscramble") {
-      const given = placed.map((i) => item.tiles[i]).join(" ");
-      record(gradeChunk(given, item.collocation.chunk));
-      return;
-    }
-    const { r, note: why } = evaluateTyped(input);
-    record(r, why);
-  };
-
-  /** Nhớ không ra → chèn "xếp hình" làm giàn giáo ngay sau chặng đang dở. */
-  const needScaffold =
-    result === "wrong" && stage !== "unscramble" && !stages.includes("unscramble");
-
-  const next = async () => {
-    if (!item || !result) return;
-
-    const plan: Stage[] = needScaffold
-      ? [...stages.slice(0, stageIdx + 1), "unscramble", ...stages.slice(stageIdx + 1)]
-      : stages;
-    if (needScaffold) setStages(plan);
-
-    if (stageIdx + 1 < plan.length) {
-      setStageIdx(stageIdx + 1);
-      setPlaced([]);
-      setInput("");
-      setResult(null);
-      setNote(null);
-      return;
-    }
-
-    await saveSession(item, tally);
-    setLog((prev) => [...prev, { title: item.collocation.chunk, score: pct(tally) }]);
-    if (idx + 1 < items.length) {
-      setIdx(idx + 1);
-      openItem(items, idx + 1);
-      activate(items[idx + 1], rows);
-    } else {
+  /** Cụm cuối đã xong: dừng lại xem tổng kết, hoặc vào thẳng phiên mới. */
+  const endSession = async (then: "summary" | "continue") => {
+    if (!item) return;
+    const { before, after } = await saveItem(item);
+    dispatch({ type: "nextItem", before, after });
+    if (then === "summary") {
       setPhase("summary");
+      return;
     }
+    // `practiced` chưa kịp cập nhật trong lượt render này nên cộng tay mục vừa xong
+    const skip = new Set(practiced).add(item.collocation.id);
+    const pool = buildPool(scopeIds ?? undefined, skip);
+    if (pool.length === 0) {
+      setPoolError(
+        "Hết cụm mới trong phạm vi này rồi — nghỉ một lát, để cách ngày rồi ôn lại sẽ nhớ lâu hơn."
+      );
+      setPhase("summary");
+      return;
+    }
+    beginSession(pool);
   };
 
   // ===== Render =====
@@ -418,8 +372,9 @@ function PracticeSession() {
             Bắt đầu
           </button>
           <p className="mt-3 text-xs text-gray-400">
-            Cụm mới thì quét nhanh rồi xếp hình; cụm đã quen thì phải tự nhớ ra. Càng thuộc, bài
-            càng khó.
+            {scope.type === "collocation"
+              ? "Luyện kỹ đúng cụm này: quét nhanh → xếp hình → tự nhớ ra → thực chiến."
+              : "Cụm mới thì quét nhanh rồi xếp hình; cụm đã quen thì phải tự nhớ ra. Càng thuộc, bài càng khó."}
           </p>
         </div>
 
@@ -475,40 +430,63 @@ function PracticeSession() {
     );
   }
 
-  // ---- Tổng kết phiên ----
+  // ---- Tổng kết: đo bằng MASTERY, không phải % của riêng phiên ----
+  // Cày mười phiên mà không cụm nào lên bậc thì % đẹp cũng vô nghĩa — con số phải nói thẳng.
   if (phase === "summary") {
-    const avg = log.length === 0 ? 0 : log.reduce((s, l) => s + l.score, 0) / log.length;
-    const score = Math.round(avg * 100);
+    const log = session.log;
+    const up = log.filter((l) => l.after > l.before).length;
+    const down = log.filter((l) => l.after < l.before).length;
+    const flat = log.length - up - down;
+    const solid = log.filter((l) => l.after >= SOLID_THRESHOLD).length;
     return (
-      <div className="px-4 py-6 text-center space-y-4">
-        <p className="text-5xl">{score >= 80 ? "🎉" : score >= 50 ? "💪" : "📖"}</p>
-        <p className="text-xl font-bold">
-          {log.length} cụm — {score}%
-        </p>
-        <ul className="space-y-1.5 text-left">
+      <div className="px-4 py-6 space-y-4">
+        {poolError && (
+          <p className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-left text-sm text-amber-800">
+            {poolError}
+          </p>
+        )}
+        <div className="text-center">
+          <p className="text-5xl">{up > 0 ? "🎉" : down > 0 ? "📖" : "💪"}</p>
+          <p className="mt-2 text-xl font-bold text-gray-900">
+            {up > 0 ? `${up} cụm lên bậc` : "Chưa cụm nào lên bậc"}
+          </p>
+          <p className="mt-1 text-sm text-gray-500">
+            {log.length} cụm đã luyện · {flat} giữ nguyên · {down} tụt bậc
+            {solid > 0 && ` · ${solid} đã thành thạo`}
+          </p>
+          {up === 0 && log.length > 0 && (
+            <p className="mt-2 text-sm text-amber-700">
+              Luyện nhiều mà không lên bậc thì chưa thật sự thuộc — để cách ngày rồi ôn lại sẽ vào
+              hơn là cày liên tục.
+            </p>
+          )}
+        </div>
+
+        <ul className="space-y-1.5">
           {[...log]
-            .sort((a, b) => a.score - b.score)
+            .sort((a, b) => a.after - b.after || a.score - b.score)
             .map((l, i) => (
               <li key={i} className="flex items-center rounded-xl border border-gray-100 px-3 py-2">
                 <span className="flex-1 font-semibold text-gray-900">{l.title}</span>
                 <span
                   className={`text-sm font-semibold ${
-                    l.score >= 0.8
+                    l.after > l.before
                       ? "text-green-600"
-                      : l.score >= 0.5
-                        ? "text-yellow-600"
-                        : "text-red-500"
+                      : l.after < l.before
+                        ? "text-red-500"
+                        : "text-gray-400"
                   }`}
                 >
-                  {Math.round(l.score * 100)}%
+                  {l.after > l.before ? "↑" : l.after < l.before ? "↓" : "="} bậc {l.after}/5
                 </span>
               </li>
             ))}
         </ul>
+
         <div className="flex gap-2">
           <Link
             href="/"
-            className="flex-1 rounded-2xl border border-gray-300 py-3 font-semibold text-gray-700"
+            className="flex-1 rounded-2xl border border-gray-300 py-3 text-center font-semibold text-gray-700"
           >
             Về Home
           </Link>
@@ -529,10 +507,11 @@ function PracticeSession() {
   if (!item || !stage)
     return <p className="p-6 text-center text-gray-400">Đang chuẩn bị bài luyện…</p>;
 
+  const { result, note } = session;
   const header = (
     <div className="pt-4 pb-2 text-center">
       <p className="text-xs font-semibold text-gray-400">
-        Cụm {idx + 1}/{items.length} · {STAGE_LABEL[stage]}
+        Cụm {session.idx + 1}/{session.items.length} · {STAGE_LABEL[stage]}
       </p>
     </div>
   );
@@ -564,7 +543,7 @@ function PracticeSession() {
           )}
         </div>
         <button
-          onClick={() => setStageIdx(stageIdx + 1)}
+          onClick={() => dispatch({ type: "advance" })}
           className="mt-4 w-full rounded-2xl bg-blue-600 py-3.5 text-lg font-semibold text-white active:bg-blue-700"
         >
           Bắt đầu luyện →
@@ -573,6 +552,7 @@ function PracticeSession() {
     );
   }
 
+  const nextStage = planAfter(session)[session.stageIdx + 1];
   const feedback = result && (
     <div className="mt-3 space-y-3">
       <div
@@ -601,21 +581,43 @@ function PracticeSession() {
             <SpeakButton text={item.scenario.model} className="shrink-0 text-base" />
           </p>
         )}
+        {willScaffold(session) && (
+          <p className="mt-1 font-normal">Lùi lại một bậc cho chắc — ghép thẻ lại cụm này đã.</p>
+        )}
         {note && <p className="mt-1 font-normal">{note}</p>}
         {item.collocation.note_vi && <p className="mt-1 font-normal">{item.collocation.note_vi}</p>}
       </div>
-      <button
-        onClick={next}
-        className="w-full rounded-2xl bg-blue-600 py-3.5 text-lg font-semibold text-white"
-      >
-        {needScaffold
-          ? `Tiếp: ${STAGE_LABEL.unscramble}`
-          : stageIdx + 1 < stages.length
-            ? `Tiếp: ${STAGE_LABEL[stages[stageIdx + 1]]}`
-            : idx + 1 >= items.length
-              ? "Tổng kết phiên"
-              : "Cụm tiếp theo →"}
-      </button>
+
+      {isSessionEnd(session) ? (
+        // Cụm cuối: không bắt qua màn tổng kết mới luyện tiếp được.
+        // Phiên luyện kỹ một cụm thì không có "luyện tiếp" — nhảy sang cụm khác là
+        // lặng lẽ phá phạm vi mà người học đã chọn.
+        <div className="flex gap-2">
+          <button
+            onClick={() => endSession("summary")}
+            className={`rounded-2xl border border-gray-300 py-3.5 font-semibold text-gray-700 ${
+              session.drill ? "w-full" : "flex-1"
+            }`}
+          >
+            Kết thúc
+          </button>
+          {!session.drill && (
+            <button
+              onClick={() => endSession("continue")}
+              className="flex-1 rounded-2xl bg-blue-600 py-3.5 text-lg font-semibold text-white"
+            >
+              Luyện tiếp →
+            </button>
+          )}
+        </div>
+      ) : (
+        <button
+          onClick={() => (hasNextStage(session) ? dispatch({ type: "advance" }) : goNextItem())}
+          className="w-full rounded-2xl bg-blue-600 py-3.5 text-lg font-semibold text-white"
+        >
+          {nextStage ? `Tiếp: ${STAGE_LABEL[nextStage]}` : "Cụm tiếp theo →"}
+        </button>
+      )}
     </div>
   );
 
@@ -655,12 +657,17 @@ function PracticeSession() {
         <p className="mt-3 rounded-xl bg-gray-50 px-3 py-2.5 text-gray-800">
           Ghép các thẻ thành cụm tiếng Anh đúng thứ tự.
         </p>
-        <TileOrder tiles={item.tiles} value={placed} onChange={setPlaced} disabled={!!result} />
+        <TileOrder
+          tiles={item.tiles}
+          value={session.placed}
+          onChange={(v) => dispatch({ type: "setPlaced", value: v })}
+          disabled={!!result}
+        />
 
         {!result && (
           <button
-            onClick={check}
-            disabled={placed.length === 0}
+            onClick={() => dispatch({ type: "submit" })}
+            disabled={session.placed.length === 0}
             className="mt-4 w-full rounded-2xl bg-blue-600 py-3.5 text-lg font-semibold text-white disabled:bg-gray-300"
           >
             Kiểm tra
@@ -676,10 +683,10 @@ function PracticeSession() {
   const typingBox = (
     <>
       <input
-        value={input}
+        value={session.input}
         disabled={!!result}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && check()}
+        onChange={(e) => dispatch({ type: "setInput", value: e.target.value })}
+        onKeyDown={(e) => e.key === "Enter" && dispatch({ type: "submit" })}
         placeholder={stage === "scenario" ? "Gõ câu đáp lại…" : "Gõ cụm tiếng Anh…"}
         autoComplete="off"
         autoCapitalize="none"
@@ -691,14 +698,14 @@ function PracticeSession() {
       {!result && (
         <div className="mt-2 flex gap-2">
           <button
-            onClick={() => record("wrong")}
+            onClick={() => dispatch({ type: "giveUp" })}
             className="rounded-2xl border border-gray-300 px-4 py-3.5 font-semibold text-gray-600"
           >
             Chịu
           </button>
           <button
-            onClick={check}
-            disabled={!input.trim()}
+            onClick={() => dispatch({ type: "submit" })}
+            disabled={!session.input.trim()}
             className="flex-1 rounded-2xl bg-blue-600 py-3.5 text-lg font-semibold text-white disabled:bg-gray-300"
           >
             Kiểm tra

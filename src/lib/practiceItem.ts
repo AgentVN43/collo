@@ -102,19 +102,34 @@ export function stagesFor(mastery: number, hasScenario: boolean): Stage[] {
   return hasScenario ? ["recall", "scenario"] : ["recall"];
 }
 
+/**
+ * Toàn bộ thang trong MỘT phiên — dùng khi người học chủ động chọn đúng một cụm để
+ * luyện kỹ. Ở đây họ đang cố ý bỏ qua lịch ôn, nên đưa hết chặng ra thay vì nhỏ giọt
+ * theo mastery như phiên random.
+ */
+export function fullLadder(hasScenario: boolean): Stage[] {
+  const all: Stage[] = ["scan", "unscramble", "recall"];
+  return hasScenario ? [...all, "scenario"] : all;
+}
+
 export function buildItem(
   c: Collocation,
   words: Word[],
   all: Collocation[],
-  rows: ProgressRow[]
+  rows: ProgressRow[],
+  /** true = luyện kỹ một cụm được chọn đích danh: chạy hết thang trong một phiên. */
+  drill = false
 ): SessionItem {
   const scenario = scenarioFor(c);
+  const hasScenario = scenario !== null;
   return {
     collocation: c,
     scanWords: words.filter((w) => c.word_ids.includes(w.id)),
     tiles: tilesFor(c.chunk),
     siblings: all.filter((x) => x.intent_id && x.intent_id === c.intent_id && x.id !== c.id),
     scenario,
-    stages: stagesFor(masteryOf(rows, "collocation", c.id), scenario !== null),
+    stages: drill
+      ? fullLadder(hasScenario)
+      : stagesFor(masteryOf(rows, "collocation", c.id), hasScenario),
   };
 }
