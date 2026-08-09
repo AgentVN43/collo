@@ -11,7 +11,7 @@ export type Stage = "scan" | "unscramble" | "recall" | "scenario";
 
 export const STAGE_LABEL: Record<Stage, string> = {
   scan: "👀 Quét nhanh",
-  unscramble: "🧩 Xếp hình",
+  unscramble: "🧩 Xếp từ",
   recall: "🧠 Vắt óc nhớ",
   scenario: "🎬 Thực chiến",
 };

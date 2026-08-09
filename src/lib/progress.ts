@@ -84,6 +84,35 @@ export function masteryDot(
 }
 
 /**
+ * Lọc theo đúng tinh thần spaced repetition cho phiên TỰ DO: chỉ lấy các mục ĐẾN HẠN ôn.
+ * Chỉ khi không còn mục nào đến hạn mới chuyển sang các mục chưa từng luyện.
+ *
+ * Cố ý KHÔNG độn thêm cho đủ số: settings đặt 10 mà chỉ 5 mục đến hạn thì phiên đúng 5.
+ * Độn thêm mục chưa tới hạn là phá chính lịch ôn mà mình vừa tính ra.
+ */
+export function dueOrNew<T extends { id: string }>(
+  items: T[],
+  rows: ProgressRow[],
+  itemType: ProgressItemType
+): T[] {
+  const today = new Date().toISOString().slice(0, 10);
+  const byItem = new Map<string, ProgressRow>();
+  for (const r of rows) {
+    if (r.item_type === itemType) byItem.set(r.item_id, r);
+  }
+  const due = items.filter((i) => {
+    const row = byItem.get(i.id);
+    return !!row && row.attempts > 0 && row.next_due != null && row.next_due <= today;
+  });
+  if (due.length > 0) return due;
+  // Chưa có gì đến hạn → học cụm mới. Dòng progress mới kích hoạt (attempts = 0) vẫn tính là mới.
+  return items.filter((i) => {
+    const row = byItem.get(i.id);
+    return !row || row.attempts === 0;
+  });
+}
+
+/**
  * Hàng đợi ưu tiên cho phiên luyện, dùng chung cho cả từ đơn lẫn collocation:
  * 1) quá hạn ôn, 2) fail-rate cao, 3) mục mới, 4) mastery thấp.
  */

@@ -8,20 +8,24 @@ import BottomSheet from "@/components/BottomSheet";
 import CollocationDetail, { RegisterBadge } from "@/components/CollocationDetail";
 import TileOrder from "@/components/TileOrder";
 import SpeakButton from "@/components/SpeakButton";
+import AiPracticeButton from "@/components/AiPracticeButton";
 import { getSupabase } from "@/lib/supabase";
 import { fetchWords } from "@/lib/words";
 import { fetchCollocations } from "@/lib/collocations";
 import { useSession } from "@/lib/useSession";
 import { type GradeResult } from "@/lib/grading";
-import { applySession, buildQueue, emptyRow, SOLID_THRESHOLD } from "@/lib/progress";
+import { applySession, buildQueue, dueOrNew, emptyRow, SOLID_THRESHOLD } from "@/lib/progress";
 import { getEnabledCategories, getPracticeSettings, type PracticeSettings } from "@/lib/settings";
 import { collectionWordIds, fetchCollections, type CollectionWithCount } from "@/lib/collections";
 import { buildItem, shuffle, STAGE_LABEL, type SessionItem } from "@/lib/practiceItem";
 import {
+  canGoHarder,
   currentItem,
   currentStage,
   emptySession,
+  hadError,
   hasNextStage,
+  isReplay,
   isSessionEnd,
   planAfter,
   reduce,
@@ -173,6 +177,11 @@ function PracticeSession() {
       let pool = practicableCollocations;
       if (scopeWordIds) {
         pool = pool.filter((c) => c.word_ids.some((id) => scopeWordIds.has(id)));
+      } else {
+        // Phiên tự do từ Home = spaced repetition thuần: chỉ các cụm đến hạn ôn.
+        // Phiên có phạm vi (từ đơn / bộ sưu tập) là lựa chọn có chủ đích của người học
+        // nên được phép vượt lịch ôn.
+        pool = dueOrNew(pool, rows, "collocation");
       }
       if (exclude) pool = pool.filter((c) => !exclude.has(c.id));
       const queued = buildQueue(pool, rows, "collocation");
@@ -268,21 +277,41 @@ function PracticeSession() {
     return { before: existing.mastery, after: updated.mastery };
   };
 
-  /** Hết chặng của cụm này → chốt sổ rồi sang cụm kế. */
+  /**
+   * Hết chặng của cụm này → chốt sổ rồi sang cụm kế.
+   * Lượt "Học lại" không lưu tiến độ: cùng một cụm mà cộng mastery hai lần là bơm điểm ảo.
+   */
   const goNextItem = async () => {
     if (!item) return;
-    const { before, after } = await saveItem(item);
-    dispatch({ type: "nextItem", before, after });
+    if (isReplay(session)) {
+      dispatch({ type: "nextItem", before: 0, after: 0 });
+    } else {
+      const { before, after } = await saveItem(item);
+      dispatch({ type: "nextItem", before, after });
+    }
     const nextIdx = session.idx + 1;
     if (nextIdx < session.items.length) activate(session.items[nextIdx], rows);
-    else setPhase("summary");
+  };
+
+  /** "Học lại": luyện kỹ thì làm lại ngay, phiên tự do thì đẩy cụm xuống cuối phiên. */
+  const studyAgain = async () => {
+    if (session.drill) {
+      dispatch({ type: "againNow" });
+      return;
+    }
+    dispatch({ type: "againLater" });
+    await goNextItem();
   };
 
   /** Cụm cuối đã xong: dừng lại xem tổng kết, hoặc vào thẳng phiên mới. */
   const endSession = async (then: "summary" | "continue") => {
     if (!item) return;
-    const { before, after } = await saveItem(item);
-    dispatch({ type: "nextItem", before, after });
+    if (isReplay(session)) {
+      dispatch({ type: "nextItem", before: 0, after: 0 });
+    } else {
+      const { before, after } = await saveItem(item);
+      dispatch({ type: "nextItem", before, after });
+    }
     if (then === "summary") {
       setPhase("summary");
       return;
@@ -373,8 +402,8 @@ function PracticeSession() {
           </button>
           <p className="mt-3 text-xs text-gray-400">
             {scope.type === "collocation"
-              ? "Luyện kỹ đúng cụm này: quét nhanh → xếp hình → tự nhớ ra → thực chiến."
-              : "Cụm mới thì quét nhanh rồi xếp hình; cụm đã quen thì phải tự nhớ ra. Càng thuộc, bài càng khó."}
+              ? "Luyện kỹ đúng cụm này: quét nhanh → xếp từ → tự nhớ ra → thực chiến."
+              : "Cụm mới thì quét nhanh rồi xếp từ; cụm đã quen thì phải tự nhớ ra. Càng thuộc, bài càng khó."}
           </p>
         </div>
 
@@ -553,6 +582,9 @@ function PracticeSession() {
   }
 
   const nextStage = planAfter(session)[session.stageIdx + 1];
+  // "Học lại" chỉ có nghĩa khi cụm vừa có lỗi; lượt học lại thì không cho học lại tiếp
+  const showAgain = hadError(session) && !isReplay(session);
+  const showHarder = canGoHarder(session);
   const feedback = result && (
     <div className="mt-3 space-y-3">
       <div
@@ -582,41 +614,75 @@ function PracticeSession() {
           </p>
         )}
         {willScaffold(session) && (
-          <p className="mt-1 font-normal">Lùi lại một bậc cho chắc — ghép thẻ lại cụm này đã.</p>
+          <p className="mt-1 font-normal">Lùi lại một bậc cho chắc — xếp từ lại cụm này đã.</p>
         )}
         {note && <p className="mt-1 font-normal">{note}</p>}
         {item.collocation.note_vi && <p className="mt-1 font-normal">{item.collocation.note_vi}</p>}
       </div>
 
-      {isSessionEnd(session) ? (
-        // Cụm cuối: không bắt qua màn tổng kết mới luyện tiếp được.
-        // Phiên luyện kỹ một cụm thì không có "luyện tiếp" — nhảy sang cụm khác là
-        // lặng lẽ phá phạm vi mà người học đã chọn.
-        <div className="flex gap-2">
-          <button
-            onClick={() => endSession("summary")}
-            className={`rounded-2xl border border-gray-300 py-3.5 font-semibold text-gray-700 ${
-              session.drill ? "w-full" : "flex-1"
-            }`}
-          >
-            Kết thúc
-          </button>
-          {!session.drill && (
+      {/* Còn chặng trong cụm này → chỉ một nút, không bắt chọn lựa gì */}
+      {hasNextStage(session) ? (
+        <button
+          onClick={() => dispatch({ type: "advance" })}
+          className="w-full rounded-2xl bg-blue-600 py-3.5 text-lg font-semibold text-white"
+        >
+          Tiếp: {STAGE_LABEL[nextStage!.stage]}
+        </button>
+      ) : (
+        <div className="space-y-2">
+          {/* Hàng phụ: chỉ hiện khi thật sự có nghĩa, để đa số cụm vẫn chỉ có một nút */}
+          {(showAgain || showHarder) && (
+            <div className="flex gap-2">
+              {showAgain && (
+                <button
+                  onClick={studyAgain}
+                  className="flex-1 rounded-2xl border border-gray-300 py-3 font-semibold text-gray-700"
+                >
+                  🔁 Học lại
+                </button>
+              )}
+              {showHarder && (
+                <button
+                  onClick={() => dispatch({ type: "harder" })}
+                  className="flex-1 rounded-2xl border-2 border-blue-500 py-3 font-semibold text-blue-700"
+                >
+                  Học tiếp: {STAGE_LABEL.scenario}
+                </button>
+              )}
+            </div>
+          )}
+
+          {isSessionEnd(session) ? (
+            // Cụm cuối: không bắt qua màn tổng kết mới luyện tiếp được.
+            // Phiên luyện kỹ một cụm thì không có "luyện tiếp" — nhảy sang cụm khác là
+            // lặng lẽ phá phạm vi mà người học đã chọn.
+            <div className="flex gap-2">
+              <button
+                onClick={() => endSession("summary")}
+                className={`rounded-2xl border border-gray-300 py-3.5 font-semibold text-gray-700 ${
+                  session.drill ? "w-full" : "flex-1"
+                }`}
+              >
+                Kết thúc
+              </button>
+              {!session.drill && (
+                <button
+                  onClick={() => endSession("continue")}
+                  className="flex-1 rounded-2xl bg-blue-600 py-3.5 text-lg font-semibold text-white"
+                >
+                  Luyện tiếp →
+                </button>
+              )}
+            </div>
+          ) : (
             <button
-              onClick={() => endSession("continue")}
-              className="flex-1 rounded-2xl bg-blue-600 py-3.5 text-lg font-semibold text-white"
+              onClick={goNextItem}
+              className="w-full rounded-2xl bg-blue-600 py-3.5 text-lg font-semibold text-white"
             >
-              Luyện tiếp →
+              Cụm tiếp theo →
             </button>
           )}
         </div>
-      ) : (
-        <button
-          onClick={() => (hasNextStage(session) ? dispatch({ type: "advance" }) : goNextItem())}
-          className="w-full rounded-2xl bg-blue-600 py-3.5 text-lg font-semibold text-white"
-        >
-          {nextStage ? `Tiếp: ${STAGE_LABEL[nextStage]}` : "Cụm tiếp theo →"}
-        </button>
       )}
     </div>
   );
@@ -638,7 +704,7 @@ function PracticeSession() {
     </BottomSheet>
   );
 
-  // ---- Xếp hình ----
+  // ---- Xếp từ ----
   if (stage === "unscramble") {
     return (
       <div className="px-4 pb-8">
@@ -719,16 +785,8 @@ function PracticeSession() {
     return (
       <div className="px-4 pb-8">
         {header}
-        <div className="space-y-2">
-          {item.scenario.context.map((t, i) => (
-            <div key={i} className="rounded-xl border border-gray-200 px-3 py-2.5">
-              <p className="text-xs font-semibold uppercase text-gray-400">{t.speaker}</p>
-              <p className="text-gray-900">{t.text}</p>
-              {t.translate && <p className="mt-0.5 text-sm text-gray-500">{t.translate}</p>}
-            </div>
-          ))}
-        </div>
-        <div className="mt-3 rounded-xl bg-blue-50 px-3 py-2.5">
+        {/* Hướng dẫn đặt TRƯỚC hội thoại, để lượt của người kia rồi tới lượt bạn đọc liền mạch */}
+        <div className="rounded-xl bg-blue-50 px-3 py-2.5">
           <p className="text-sm text-blue-900">
             Bạn là <b>{item.scenario.speaker}</b>. Đáp lại bằng cách nói{" "}
             <b>{REGISTER_LABELS[item.collocation.register].toLowerCase()}</b> mang nghĩa:
@@ -738,9 +796,27 @@ function PracticeSession() {
             Đáp thành câu hoàn chỉnh cũng được — chỉ cần có cụm trong đó.
           </p>
         </div>
+
+        <div className="mt-3 space-y-2">
+          {item.scenario.context.map((t, i) => (
+            <div key={i} className="rounded-xl border border-gray-200 px-3 py-2.5">
+              <p className="text-xs font-semibold uppercase text-gray-400">{t.speaker}</p>
+              <p className="flex items-start gap-1.5 text-gray-900">
+                <span className="flex-1">{t.text}</span>
+                <SpeakButton text={t.text} className="shrink-0 text-base" />
+              </p>
+              {t.translate && <p className="mt-0.5 text-sm text-gray-500">{t.translate}</p>}
+            </div>
+          ))}
+          <p className="pl-1 text-xs font-semibold uppercase text-blue-500">
+            {item.scenario.speaker} (bạn)
+          </p>
+        </div>
         {typingBox}
         {result && <div className="mt-2 flex justify-center">{theoryButton}</div>}
         {feedback}
+        {/* Thực chiến là chặng cuối — chỗ hợp lý nhất để mời người học ra hội thoại mở */}
+        {result && <AiPracticeButton collocation={item.collocation} />}
         {sheet}
       </div>
     );

@@ -6,6 +6,7 @@ import type { Collocation, Register, Word } from "@/lib/types";
 import { REGISTER_HINTS, REGISTER_LABELS } from "@/lib/types";
 import SpeakButton from "./SpeakButton";
 import ConversationSheet from "./ConversationSheet";
+import AiPracticeButton from "./AiPracticeButton";
 
 const REGISTER_STYLE: Record<Register, string> = {
   formal: "bg-indigo-50 border-indigo-200 text-indigo-800",
@@ -182,6 +183,8 @@ export default function CollocationDetail({
           </div>
         </div>
       )}
+
+      <AiPracticeButton collocation={collocation} />
 
       <ConversationSheet
         open={translationOpen}
